@@ -1,0 +1,128 @@
+{
+  "$defs": {
+    "ResourceUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "cpu_percent_avg": {
+          "minimum": 0,
+          "title": "Cpu Percent Avg",
+          "type": "number"
+        },
+        "cpu_percent_max": {
+          "minimum": 0,
+          "title": "Cpu Percent Max",
+          "type": "number"
+        },
+        "cpu_throttled_ratio": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Share of CPU periods throttled, if known.",
+          "title": "Cpu Throttled Ratio"
+        },
+        "instance": {
+          "description": "Container or pod the numbers belong to.",
+          "title": "Instance",
+          "type": "string"
+        },
+        "memory_end_bytes": {
+          "minimum": 0,
+          "title": "Memory End Bytes",
+          "type": "integer"
+        },
+        "memory_limit_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Memory Limit Bytes"
+        },
+        "memory_max_bytes": {
+          "minimum": 0,
+          "title": "Memory Max Bytes",
+          "type": "integer"
+        },
+        "memory_start_bytes": {
+          "minimum": 0,
+          "title": "Memory Start Bytes",
+          "type": "integer"
+        },
+        "oom_kills": {
+          "minimum": 0,
+          "title": "Oom Kills",
+          "type": "integer"
+        },
+        "ref": {
+          "description": "Citation of one item in a recorded tool result: e<event_id>#<index>.",
+          "examples": [
+            "e42#3"
+          ],
+          "pattern": "^e([1-9]\\d*)#(\\d+)$",
+          "title": "Ref",
+          "type": "string"
+        },
+        "restarts": {
+          "minimum": 0,
+          "title": "Restarts",
+          "type": "integer"
+        },
+        "service": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Service",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref",
+        "service",
+        "instance",
+        "cpu_percent_avg",
+        "cpu_percent_max",
+        "memory_start_bytes",
+        "memory_end_bytes",
+        "memory_max_bytes",
+        "restarts",
+        "oom_kills"
+      ],
+      "title": "ResourceUsage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "instances": {
+      "items": {
+        "$ref": "#/$defs/ResourceUsage"
+      },
+      "title": "Instances",
+      "type": "array"
+    },
+    "truncated": {
+      "default": false,
+      "description": "True when the backend had more items than were returned.",
+      "title": "Truncated",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "instances"
+  ],
+  "title": "GetResourceUsageOutput",
+  "type": "object"
+}

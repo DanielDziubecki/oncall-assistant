@@ -1,0 +1,103 @@
+{
+  "$defs": {
+    "HealthStats": {
+      "additionalProperties": false,
+      "properties": {
+        "error_ratio": {
+          "description": "Failed requests / all requests, 0 to 1.",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Error Ratio",
+          "type": "number"
+        },
+        "p50_ms": {
+          "minimum": 0,
+          "title": "P50 Ms",
+          "type": "number"
+        },
+        "p99_ms": {
+          "minimum": 0,
+          "title": "P99 Ms",
+          "type": "number"
+        },
+        "rps": {
+          "minimum": 0,
+          "title": "Rps",
+          "type": "number"
+        }
+      },
+      "required": [
+        "rps",
+        "error_ratio",
+        "p50_ms",
+        "p99_ms"
+      ],
+      "title": "HealthStats",
+      "type": "object"
+    },
+    "ServiceHealth": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HealthStats"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Same stats for the comparable period before the range."
+        },
+        "current": {
+          "$ref": "#/$defs/HealthStats"
+        },
+        "ref": {
+          "description": "Citation of one item in a recorded tool result: e<event_id>#<index>.",
+          "examples": [
+            "e42#3"
+          ],
+          "pattern": "^e([1-9]\\d*)#(\\d+)$",
+          "title": "Ref",
+          "type": "string"
+        },
+        "service": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Service",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref",
+        "service",
+        "current"
+      ],
+      "title": "ServiceHealth",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "services": {
+      "items": {
+        "$ref": "#/$defs/ServiceHealth"
+      },
+      "title": "Services",
+      "type": "array"
+    },
+    "truncated": {
+      "default": false,
+      "description": "True when the backend had more items than were returned.",
+      "title": "Truncated",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "services"
+  ],
+  "title": "GetServiceHealthOutput",
+  "type": "object"
+}
