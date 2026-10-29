@@ -1,0 +1,145 @@
+{
+  "$defs": {
+    "Span": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Attributes",
+          "type": "object"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "number"
+        },
+        "kind": {
+          "$ref": "#/$defs/SpanKind"
+        },
+        "operation": {
+          "title": "Operation",
+          "type": "string"
+        },
+        "parent_span_id": {
+          "anyOf": [
+            {
+              "description": "W3C span id, 16 hex.",
+              "pattern": "^[0-9a-f]{16}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Span Id"
+        },
+        "ref": {
+          "description": "Citation of one item in a recorded tool result: e<event_id>#<index>.",
+          "examples": [
+            "e42#3"
+          ],
+          "pattern": "^e([1-9]\\d*)#(\\d+)$",
+          "title": "Ref",
+          "type": "string"
+        },
+        "service": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Service",
+          "type": "string"
+        },
+        "span_id": {
+          "description": "W3C span id, 16 hex.",
+          "pattern": "^[0-9a-f]{16}$",
+          "title": "Span Id",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/SpanStatus"
+        },
+        "status_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Status Message"
+        }
+      },
+      "required": [
+        "ref",
+        "span_id",
+        "parent_span_id",
+        "service",
+        "operation",
+        "kind",
+        "start",
+        "duration_ms",
+        "status"
+      ],
+      "title": "Span",
+      "type": "object"
+    },
+    "SpanKind": {
+      "enum": [
+        "server",
+        "client",
+        "producer",
+        "consumer",
+        "internal"
+      ],
+      "title": "SpanKind",
+      "type": "string"
+    },
+    "SpanStatus": {
+      "enum": [
+        "unset",
+        "ok",
+        "error"
+      ],
+      "title": "SpanStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "spans": {
+      "description": "Flat list; rebuild the tree from parent_span_id.",
+      "items": {
+        "$ref": "#/$defs/Span"
+      },
+      "title": "Spans",
+      "type": "array"
+    },
+    "trace_id": {
+      "description": "W3C trace id, 32 hex.",
+      "pattern": "^[0-9a-f]{32}$",
+      "title": "Trace Id",
+      "type": "string"
+    },
+    "truncated": {
+      "default": false,
+      "description": "True when the backend had more items than were returned.",
+      "title": "Truncated",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "trace_id",
+    "spans"
+  ],
+  "title": "GetTraceOutput",
+  "type": "object"
+}

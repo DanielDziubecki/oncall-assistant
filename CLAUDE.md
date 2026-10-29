@@ -7,6 +7,7 @@ Read-only AI on-call agent. The project plan (Decisions, Phases, Progress tracke
 - `make install` — `uv sync --locked`
 - `make check` — ruff lint + format check, pyright (strict), pytest. Must pass before every commit.
 - `make format` — auto-fix lint and formatting
+- `make schemas` — regenerate `schemas/` after changing a capability, `Diagnosis` or `Hypothesis` model; commit the result
 
 ## Rules
 

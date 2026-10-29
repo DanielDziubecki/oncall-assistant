@@ -1,0 +1,121 @@
+{
+  "$defs": {
+    "Point": {
+      "additionalProperties": false,
+      "properties": {
+        "ts": {
+          "format": "date-time",
+          "title": "Ts",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "ts",
+        "value"
+      ],
+      "title": "Point",
+      "type": "object"
+    },
+    "Series": {
+      "additionalProperties": false,
+      "properties": {
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "object"
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/Point"
+          },
+          "title": "Points",
+          "type": "array"
+        },
+        "ref": {
+          "description": "Citation of one item in a recorded tool result: e<event_id>#<index>.",
+          "examples": [
+            "e42#3"
+          ],
+          "pattern": "^e([1-9]\\d*)#(\\d+)$",
+          "title": "Ref",
+          "type": "string"
+        },
+        "stats": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SeriesStats"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "None when the series is empty."
+        }
+      },
+      "required": [
+        "ref",
+        "labels",
+        "points"
+      ],
+      "title": "Series",
+      "type": "object"
+    },
+    "SeriesStats": {
+      "additionalProperties": false,
+      "properties": {
+        "last": {
+          "title": "Last",
+          "type": "number"
+        },
+        "max": {
+          "title": "Max",
+          "type": "number"
+        },
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "min": {
+          "title": "Min",
+          "type": "number"
+        }
+      },
+      "required": [
+        "min",
+        "max",
+        "mean",
+        "last"
+      ],
+      "title": "SeriesStats",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "series": {
+      "items": {
+        "$ref": "#/$defs/Series"
+      },
+      "title": "Series",
+      "type": "array"
+    },
+    "truncated": {
+      "default": false,
+      "description": "True when the backend had more items than were returned.",
+      "title": "Truncated",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "series"
+  ],
+  "title": "QueryMetricOutput",
+  "type": "object"
+}

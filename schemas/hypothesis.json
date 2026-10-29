@@ -1,0 +1,156 @@
+{
+  "$defs": {
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "A claim tied to one recorded tool result item, with a value the verifier can check.",
+      "properties": {
+        "claim": {
+          "description": "What this item shows, in one sentence.",
+          "minLength": 1,
+          "title": "Claim",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "quote": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exact text from the item: a trace id, span id or log substring.",
+          "title": "Quote"
+        },
+        "ref": {
+          "description": "Citation of one item in a recorded tool result: e<event_id>#<index>.",
+          "examples": [
+            "e42#3"
+          ],
+          "pattern": "^e([1-9]\\d*)#(\\d+)$",
+          "title": "Ref",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "A number from the item, e.g. a metric value or error ratio.",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "ref",
+        "kind",
+        "claim"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "alert",
+        "metric",
+        "trace",
+        "log",
+        "resource"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "FaultType": {
+      "enum": [
+        "dependency_unreachable",
+        "network_latency",
+        "packet_loss",
+        "application_error",
+        "memory_leak",
+        "cpu_saturation",
+        "slow_consumer",
+        "bad_config_deploy",
+        "traffic_surge",
+        "none"
+      ],
+      "title": "FaultType",
+      "type": "string"
+    },
+    "HypothesisStatus": {
+      "enum": [
+        "open",
+        "supported",
+        "rejected"
+      ],
+      "title": "HypothesisStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "component": {
+      "anyOf": [
+        {
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*(->[A-Za-z0-9][A-Za-z0-9_.\\-]*)?$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Component"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "fault_type": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FaultType"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "id": {
+      "examples": [
+        "h1"
+      ],
+      "pattern": "^h[1-9]\\d*$",
+      "title": "Id",
+      "type": "string"
+    },
+    "statement": {
+      "minLength": 1,
+      "title": "Statement",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/HypothesisStatus",
+      "default": "open"
+    }
+  },
+  "required": [
+    "id",
+    "statement"
+  ],
+  "title": "Hypothesis",
+  "type": "object"
+}
