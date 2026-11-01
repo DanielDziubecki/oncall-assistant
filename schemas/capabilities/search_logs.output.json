@@ -1,0 +1,107 @@
+{
+  "$defs": {
+    "LogRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "title": "Body",
+          "type": "string"
+        },
+        "ref": {
+          "description": "Citation of one item in a recorded tool result: e<event_id>#<index>.",
+          "examples": [
+            "e42#3"
+          ],
+          "pattern": "^e([1-9]\\d*)#(\\d+)$",
+          "title": "Ref",
+          "type": "string"
+        },
+        "service": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.\\-]*$",
+          "title": "Service",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "span_id": {
+          "anyOf": [
+            {
+              "description": "W3C span id, 16 hex.",
+              "pattern": "^[0-9a-f]{16}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Span Id"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "trace_id": {
+          "anyOf": [
+            {
+              "description": "W3C trace id, 32 hex.",
+              "pattern": "^[0-9a-f]{32}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trace Id"
+        }
+      },
+      "required": [
+        "ref",
+        "timestamp",
+        "service",
+        "severity",
+        "body"
+      ],
+      "title": "LogRecord",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "trace",
+        "debug",
+        "info",
+        "warn",
+        "error",
+        "fatal"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "records": {
+      "items": {
+        "$ref": "#/$defs/LogRecord"
+      },
+      "title": "Records",
+      "type": "array"
+    },
+    "truncated": {
+      "default": false,
+      "description": "True when the backend had more items than were returned.",
+      "title": "Truncated",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "records"
+  ],
+  "title": "SearchLogsOutput",
+  "type": "object"
+}

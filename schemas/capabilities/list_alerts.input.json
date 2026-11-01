@@ -1,0 +1,61 @@
+{
+  "$defs": {
+    "AlertState": {
+      "enum": [
+        "pending",
+        "firing",
+        "resolved"
+      ],
+      "title": "AlertState",
+      "type": "string"
+    },
+    "TimeRange": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeRange",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "state": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AlertState"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "time_range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TimeRange"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "title": "ListAlertsInput",
+  "type": "object"
+}

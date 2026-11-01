@@ -1,4 +1,4 @@
-.PHONY: install lint format typecheck test check
+.PHONY: install lint format typecheck test check schemas
 
 install:
 	uv sync --locked
@@ -18,3 +18,6 @@ test:
 	uv run pytest
 
 check: lint typecheck test
+
+schemas:
+	uv run python -m oncall.contracts

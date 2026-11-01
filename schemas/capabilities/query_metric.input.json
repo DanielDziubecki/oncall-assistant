@@ -1,0 +1,101 @@
+{
+  "$defs": {
+    "Aggregation": {
+      "enum": [
+        "avg",
+        "sum",
+        "min",
+        "max",
+        "count",
+        "rate",
+        "p50",
+        "p95",
+        "p99"
+      ],
+      "title": "Aggregation",
+      "type": "string"
+    },
+    "TimeRange": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "TimeRange",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "agg": {
+      "$ref": "#/$defs/Aggregation"
+    },
+    "filters": {
+      "patternProperties": {
+        "^[A-Za-z_][A-Za-z0-9_.]*$": {
+          "type": "string"
+        }
+      },
+      "propertyNames": {
+        "maxLength": 100,
+        "minLength": 1
+      },
+      "title": "Filters",
+      "type": "object"
+    },
+    "group_by": {
+      "items": {
+        "maxLength": 100,
+        "minLength": 1,
+        "pattern": "^[A-Za-z_][A-Za-z0-9_.]*$",
+        "type": "string"
+      },
+      "maxItems": 5,
+      "title": "Group By",
+      "type": "array"
+    },
+    "metric": {
+      "maxLength": 200,
+      "minLength": 1,
+      "pattern": "^[A-Za-z_:][A-Za-z0-9_:.]*$",
+      "title": "Metric",
+      "type": "string"
+    },
+    "step_s": {
+      "default": 60,
+      "maximum": 3600,
+      "minimum": 10,
+      "title": "Step S",
+      "type": "integer"
+    },
+    "time_range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TimeRange"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "metric",
+    "agg"
+  ],
+  "title": "QueryMetricInput",
+  "type": "object"
+}
