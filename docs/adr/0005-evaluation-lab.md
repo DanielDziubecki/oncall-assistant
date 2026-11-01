@@ -53,6 +53,25 @@ It looks for the denylist in `lab/leakcheck/denylist.yml` plus every scenario id
   - shopfront `main` (files and history): 0 leaks;
   - the abandoned OpenTelemetry Demo branch `step-03-fork-stack-a`: 820 leaks (`flagd`, `openfeature`, `feature_flag`, ...);
   - live telemetry with the lab overlay running: 0 leaks.
+- Every fault scenario was run end to end on the live stack: inject, wait for the trigger alert, reset, wait for all alerts to clear. All 10 fired their trigger, and nothing kept firing after a reset.
+
+  | Incident | Trigger | Fired after |
+  | --- | --- | --- |
+  | Payment unreachable | CheckoutErrorRateHigh | 100 s |
+  | Payment network latency | CheckoutLatencyHigh | 100 s |
+  | Payment charge bug | CheckoutErrorRateHigh | 121 s |
+  | Catalog error for one product | CatalogErrorRateHigh | 202 s |
+  | Recommendation memory leak | ContainerRestarting | 642 s |
+  | Cart store hang | CartLatencyHigh | 121 s |
+  | Slow order consumer | OrdersBacklogHigh | 220 s |
+  | Bad config release | ShippingErrorRateHigh | 111 s |
+  | Traffic surge | StorefrontTrafficSurge | 181 s |
+  | Packet loss to catalog | CheckoutLatencyHigh | 271 s |
+
+  The first pass forced three changes:
+  - Packet loss uses iptables at 20% and triggers on checkout latency.
+  - The traffic surge runs at 6x (120 shoppers) with a median-based alert.
+  - Tempo needed more memory headroom (shopfront#3). At 200 shoppers it was OOM-killed repeatedly.
 - The structural part of the plan's leak check (Toxiproxy API, Docker socket and lab hosts unreachable from the agent and proxy zones) waits until those zones exist in step 6.
 - Toxiproxy only proxies checkout → payment, which is all incidents 1 and 2 need. Another proxied link means one more entry in `toxiproxy.json` and the same network trick in the overlay.
 - The old fork branch is still on GitHub. It isn't on shopfront's default branch, so a normal clone doesn't show it, but deleting it removes the risk entirely.
