@@ -115,6 +115,7 @@ def test_docker_level_injections(tmp_path: Path) -> None:
             {"kind": "pause", "container": "valkey"},
             {"kind": "cpu_limit", "container": "fulfillment", "cpus": 0.02},
             {"kind": "netem", "container": "catalog", "loss_percent": 15},
+            {"kind": "packet_loss", "container": "shipping", "percent": 15},
             {"kind": "restart", "container": "loadgen"},
         )
     )
@@ -123,9 +124,13 @@ def test_docker_level_injections(tmp_path: Path) -> None:
     assert ["pause", "valkey"] in docker
     assert ["update", "--cpus", "0.02", "fulfillment"] in docker
     assert ["restart", "loadgen"] in docker
-    netem = next(c for c in docker if c[0] == "run")
+    netem, drop = (c for c in docker if c[0] == "run")
     assert netem[netem.index("--network") + 1] == "container:catalog"
     assert netem[-5:] == ["eth0", "root", "netem", "loss", "15%"]
+    assert drop[drop.index("--network") + 1] == "container:shipping"
+    assert drop[-9:] == [
+        "OUTPUT", "-m", "statistic", "--mode", "random", "--probability", "0.1500", "-j", "DROP",
+    ]  # fmt: skip
 
 
 def test_only_one_scenario_at_a_time(tmp_path: Path) -> None:
@@ -166,3 +171,25 @@ def test_reset_unpauses_leftovers_without_state(tmp_path: Path) -> None:
 
     assert ["unpause", "valkey"] in recorder.docker()
     assert recorder.compose_tails() == [] or all("up" not in t for t in recorder.compose_tails())
+
+
+def test_failed_injection_is_rolled_back(tmp_path: Path) -> None:
+    injector, recorder, fake = make(tmp_path)
+
+    def fail_on_update(args: Sequence[str], env: dict[str, str]) -> str:
+        if "update" in args:
+            raise RuntimeError("docker update failed")
+        return recorder(args, env)
+
+    injector.stack.runner = fail_on_update
+    with pytest.raises(RuntimeError, match="docker update failed"):
+        injector.inject(
+            scenario(
+                {"kind": "pause", "container": "valkey"},
+                {"kind": "cpu_limit", "container": "fulfillment", "cpus": 0.02},
+            )
+        )
+
+    assert ["unpause", "valkey"] in recorder.docker()
+    assert ("POST", "/reset", None) in fake.requests
+    assert injector.active() == (None, [])

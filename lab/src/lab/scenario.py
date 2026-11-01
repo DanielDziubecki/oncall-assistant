@@ -64,13 +64,26 @@ class Netem(Schema):
         return self
 
 
+class PacketLoss(Schema):
+    """Drop a share of a container's outgoing packets (iptables statistic match).
+
+    Same effect as netem's egress loss, but only needs the far more common xt_statistic
+    kernel module.
+    """
+
+    kind: Literal["packet_loss"] = "packet_loss"
+    container: ContainerName
+    percent: float = Field(gt=0, lt=100)
+
+
 class Restart(Schema):
     kind: Literal["restart"] = "restart"
     container: ContainerName
 
 
 Injection = Annotated[
-    Toxic | Settings | Pause | CpuLimit | Netem | Restart, Field(discriminator="kind")
+    Toxic | Settings | Pause | CpuLimit | Netem | PacketLoss | Restart,
+    Field(discriminator="kind"),
 ]
 
 

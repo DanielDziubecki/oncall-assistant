@@ -23,10 +23,11 @@ Step 4 builds the lab that injects incidents into shopfront and makes sure the a
 | `settings` | Redeploys a service with changed environment, through a generated compose override | Delete the override and recreate the service |
 | `pause` | `docker pause` | `docker unpause` |
 | `cpu_limit` | `docker update --cpus` | Recreate the container |
-| `netem` | `tc qdisc ... netem` from a netshoot sidecar sharing the container's network namespace | `tc qdisc del` |
+| `netem` | `tc qdisc ... netem` (delay or loss) from a netshoot sidecar sharing the container's network namespace | `tc qdisc del` |
+| `packet_loss` | `iptables ... -m statistic --mode random -j DROP` on the container's outgoing packets, from the same sidecar | `iptables -D` |
 | `restart` | `docker restart` | Nothing to undo |
 
-`lab reset` also clears toxics and unpauses containers left over from a crashed run. Only one scenario can be active at a time; the state lives in `lab/.state/`, which is gitignored.
+If any step of an injection fails, the injector resets right away. `lab reset` also clears toxics and unpauses containers left over from a crashed run. Only one scenario can be active at a time; the state lives in `lab/.state/`, which is gitignored.
 
 **Invisible proxying.** A lab-only compose overlay (`lab/compose/overlay.lab.yml`) handles this:
 - Toxiproxy joins the shared network under the alias `payment`.
@@ -41,6 +42,8 @@ This replaces the plan's sanitizing collector, which existed only to drop flag-e
 2. **Live telemetry:** Prometheus label names and values, Loki labels and the last 30 minutes of logs, Tempo tags and their values, and active alerts.
 
 It looks for the denylist in `lab/leakcheck/denylist.yml` plus every scenario id and canary. One allowlisted line covers OpenTelemetry's `propagate.inject(` in fulfillment. CI runs the repo scan against shopfront `main` on every PR.
+
+**Packet loss uses iptables, not netem.** Incident 10 uses `packet_loss`. It has the same effect as netem's egress loss, but only needs the `xt_statistic` kernel module. Some kernels, including this project's cloud development sandbox, lack `sch_netem`. `netem` stays available for delay.
 
 **Images.** Toxiproxy `ghcr.io/shopify/toxiproxy:2.12.0` and netshoot `nicolaka/netshoot:v0.14`.
 

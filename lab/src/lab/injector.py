@@ -5,11 +5,22 @@ import json
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 
 from pydantic import TypeAdapter
 
-from lab.scenario import CpuLimit, Injection, Netem, Pause, Restart, Scenario, Settings, Toxic
+from lab.scenario import (
+    CpuLimit,
+    Injection,
+    Netem,
+    PacketLoss,
+    Pause,
+    Restart,
+    Scenario,
+    Settings,
+    Toxic,
+)
 from lab.stack import Stack
 from lab.toxiproxy import Toxiproxy
 
@@ -51,7 +62,11 @@ class Injector:
         if current is not None:
             raise RuntimeError(f"scenario {current} is still active; run `lab reset` first")
         self._save(scenario.id, list(scenario.injection))
-        return [self._apply(injection) for injection in scenario.injection]
+        try:
+            return [self._apply(injection) for injection in scenario.injection]
+        except Exception:
+            self.reset()  # leave the stack clean if any step fails
+            raise
 
     def _apply(self, injection: Injection) -> str:
         match injection:
@@ -79,15 +94,22 @@ class Injector:
             case Netem():
                 self._tc(injection.container, "replace", *_netem_args(injection))
                 return f"netem {' '.join(_netem_args(injection))} on {injection.container}"
+            case PacketLoss():
+                self._sidecar(injection.container, "iptables", "-A", *_drop_rule(injection))
+                return f"dropping {injection.percent:g}% of packets from {injection.container}"
             case Restart():
                 self.stack.docker("restart", injection.container)
                 return f"restarted {injection.container}"
 
-    def _tc(self, container: str, action: str, *args: str) -> None:
+    def _sidecar(self, container: str, *command: str) -> None:
+        """Run a network tool inside `container`'s network namespace."""
         self.stack.docker(
             "run", "--rm", "--network", f"container:{container}", "--cap-add", "NET_ADMIN",
-            self.netem_image, "tc", "qdisc", action, "dev", "eth0", "root", *args,
+            self.netem_image, *command,
         )  # fmt: skip
+
+    def _tc(self, container: str, action: str, *args: str) -> None:
+        self._sidecar(container, "tc", "qdisc", action, "dev", "eth0", "root", *args)
 
     # Undoing -------------------------------------------------------------------------
 
@@ -104,13 +126,17 @@ class Injector:
         for injection in injections:
             match injection:
                 case Pause():
-                    self._try(lambda c=injection.container: self.stack.docker("unpause", c))
+                    self._try(partial(self.stack.docker, "unpause", injection.container))
                     done.append(f"unpaused {injection.container}")
                 case CpuLimit():
                     recreate.add(injection.container)
                 case Netem():
-                    self._try(lambda c=injection.container: self._tc(c, "del"))
+                    self._try(partial(self._tc, injection.container, "del"))
                     done.append(f"removed netem from {injection.container}")
+                case PacketLoss():
+                    rule = _drop_rule(injection)
+                    self._try(partial(self._sidecar, injection.container, "iptables", "-D", *rule))
+                    done.append(f"stopped dropping packets from {injection.container}")
                 case Toxic() | Settings() | Restart():
                     pass
         for container in self._paused_containers():
@@ -137,6 +163,21 @@ class Injector:
         """Run an undo step that may already have been undone."""
         with contextlib.suppress(subprocess.CalledProcessError):
             action()
+
+
+def _drop_rule(loss: PacketLoss) -> list[str]:
+    probability = f"{loss.percent / 100:.4f}"
+    return [
+        "OUTPUT",
+        "-m",
+        "statistic",
+        "--mode",
+        "random",
+        "--probability",
+        probability,
+        "-j",
+        "DROP",
+    ]
 
 
 def _netem_args(netem: Netem) -> list[str]:

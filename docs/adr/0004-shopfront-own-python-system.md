@@ -42,7 +42,7 @@ Shopfront is our own system, all Python.
 | 7 | Slow order consumer | CPU limit on `fulfillment`; invoice signing costs about 0.3 s of CPU per order. With `--cpus 0.02`, lag reached 54 and the alert fired after 4 minutes. | OrdersBacklogHigh |
 | 8 | Bad config release | Shipping redeployed as a new version with a wrong `DATABASE_URL`. It starts, reports connection refused on every quote and shows the new `service.version`. | ShippingErrorRateHigh |
 | 9 | Traffic surge | Load generator users ×N | StorefrontTrafficSurge, StorefrontLatencyHigh |
-| 10 | Packet loss to catalog | netem on `catalog` | StorefrontLatencyHigh |
+| 10 | Packet loss to catalog | 15% of catalog's outgoing packets dropped (iptables, see ADR 5) | CheckoutLatencyHigh |
 
 Verified on the running stack:
 
