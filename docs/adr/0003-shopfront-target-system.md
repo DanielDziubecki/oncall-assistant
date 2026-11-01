@@ -1,6 +1,6 @@
 # 3. Shopfront target system (step 3)
 
-Date: 2026-11-01 · Status: accepted
+Date: 2026-11-01 · Status: superseded by [ADR 4](0004-shopfront-own-python-system.md)
 
 ## Context
 
