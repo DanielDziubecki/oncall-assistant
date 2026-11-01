@@ -37,6 +37,18 @@ make check       # ruff, pyright (strict), pytest
 uv run oncall --version
 ```
 
+### Evaluation lab
+
+The lab ([`lab/`](lab/)) runs the target system, [shopfront](https://github.com/DanielDziubecki/shopfront), with a lab-only overlay, injects incidents from the catalog in [`lab/catalog/`](lab/catalog/) and checks that nothing the agent can see gives the injection away. It expects a shopfront checkout next to this repo (or `LAB_TARGET=path`).
+
+```bash
+uv run lab up                      # shopfront + observability + lab overlay
+uv run lab scenarios               # the incident catalog
+uv run lab inject "cart store"     # by id or part of the title
+uv run lab reset                   # undo it
+uv run lab leakcheck               # target repo, its history and live telemetry
+```
+
 Architecture decisions are recorded in [`docs/adr/`](docs/adr/).
 
 ## License

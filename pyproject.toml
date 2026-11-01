@@ -15,10 +15,18 @@ oncall = "oncall.cli:main"
 
 [dependency-groups]
 dev = [
+    "oncall-lab",
     "pyright>=1.1.400",
     "pytest>=8.4",
     "ruff>=0.12",
+    "types-pyyaml>=6.0",
 ]
+
+[tool.uv.workspace]
+members = ["lab"]
+
+[tool.uv.sources]
+oncall-lab = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.8,<0.12"]
@@ -42,7 +50,7 @@ select = [
 ]
 
 [tool.pyright]
-include = ["src", "tests"]
+include = ["src", "tests", "lab/src"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 
