@@ -19,6 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The target system: lab tests check the catalog against its alert rules.
+      - uses: actions/checkout@v4
+        with:
+          repository: DanielDziubecki/shopfront
+          path: .target/shopfront
+
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -36,3 +42,27 @@ jobs:
 
       - name: Test
         run: uv run pytest
+        env:
+          LAB_TARGET: .target/shopfront
+
+  leakcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out the target with full history
+        uses: actions/checkout@v4
+        with:
+          repository: DanielDziubecki/shopfront
+          path: .target/shopfront
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - run: uv sync --locked
+
+      - name: Nothing in the target repo or its history hints at the lab
+        run: uv run lab --target .target/shopfront leakcheck --repo-only --ref HEAD

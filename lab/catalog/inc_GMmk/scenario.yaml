@@ -1,0 +1,17 @@
+id: inc_GMmk
+title: Bad config release
+tier: nightly
+warmup_s: 120
+injection:
+  - kind: settings
+    service: shipping
+    env:
+      SERVICE_VERSION: "1.4.2"
+      DATABASE_URL: postgresql://shop:shop@postgres:5433/shipping
+ready_when: {alert: ShippingErrorRateHigh, timeout_s: 300}
+ground_truth:
+  component: shipping
+  fault_type: bad_config_deploy
+  mechanism: "shipping 1.4.2 was deployed with a wrong database port, so every quote fails with connection refused and checkout fails"
+  required_evidence_kinds: [log, trace]
+canary: "cnry-083c0a"

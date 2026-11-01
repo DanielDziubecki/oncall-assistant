@@ -1,0 +1,13 @@
+id: inc_wfAe
+title: Traffic surge
+tier: nightly
+warmup_s: 900
+injection:
+  - {kind: settings, service: loadgen, env: {USERS: "120"}}
+ready_when: {alert: StorefrontTrafficSurge, timeout_s: 600}
+ground_truth:
+  component: storefront
+  fault_type: traffic_surge
+  mechanism: "storefront traffic rises about sixfold; latency rises across services but none is failing on its own"
+  required_evidence_kinds: [metric]
+canary: "cnry-283b0e"

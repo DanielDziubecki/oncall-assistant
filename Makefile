@@ -1,4 +1,4 @@
-.PHONY: install lint format typecheck test check schemas
+.PHONY: install lint format typecheck test check schemas lab-up lab-down leakcheck
 
 install:
 	uv sync --locked
@@ -21,3 +21,13 @@ check: lint typecheck test
 
 schemas:
 	uv run python -m oncall.contracts
+
+# Evaluation lab. The target checkout defaults to ../shopfront (override with LAB_TARGET=...).
+lab-up:
+	uv run lab up
+
+lab-down:
+	uv run lab down
+
+leakcheck:
+	uv run lab leakcheck

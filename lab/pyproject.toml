@@ -1,0 +1,24 @@
+[project]
+name = "oncall-lab"
+version = "0.0.1"
+description = "Evaluation lab: fault injection into the target system, and leakage checks."
+requires-python = ">=3.13"
+dependencies = [
+    "oncall",
+    "httpx>=0.28",
+    "pydantic>=2.14.2",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+lab = "lab.cli:main"
+
+[tool.uv.sources]
+oncall = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "lab"
