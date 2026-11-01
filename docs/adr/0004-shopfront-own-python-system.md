@@ -14,14 +14,19 @@ ADR 3 built shopfront as a trimmed fork of the OpenTelemetry Demo. That fork was
 Shopfront is our own system, all Python.
 
 - **Services:** storefront, catalog, cart, checkout, payment, shipping, recommendation and fulfillment.
-  - All are FastAPI apps except fulfillment, which is an asyncio RabbitMQ worker.
+  - All are FastAPI apps except fulfillment, which is an asyncio Kafka consumer.
   - They live in one uv workspace and build from a single Dockerfile.
   - `libs/shopkit` holds the shared OpenTelemetry setup, JSON logging, the app factory and HTTP clients.
-- **Infrastructure:** PostgreSQL (`catalog`, `shipping` and `orders` databases), Valkey and RabbitMQ. A Locust load generator runs 20 shoppers.
-- **RabbitMQ only, from day one.** There is no Kafka. Queue incidents and `inspect_queue` / `peek_dead_letters` work against RabbitMQ now, rather than waiting for v0.2 (step 18). Fulfillment dead-letters rejected orders to `fulfillment.orders.dead`.
+- **Infrastructure:** PostgreSQL (`catalog`, `shipping` and `orders` databases), Valkey and a single-node Kafka (KRaft, no ZooKeeper). A Locust load generator runs 20 shoppers.
+- **Kafka is the only broker.** RabbitMQ was built first and then replaced. Kafka is more common in production systems, consumer lag is the standard backlog signal, and reading a dead-letter topic doesn't consume it, which suits a read-only `peek_dead_letters`. The cost is about 220 MB more memory than RabbitMQ.
+  - checkout publishes to `orders` (3 partitions, keyed by user, `acks=all`, idempotent producer).
+  - fulfillment consumes it as group `fulfillment` and commits offsets only after an order is stored.
+  - Malformed messages go to `orders.dlq`, with the reason, the source offset and the trace context in the message headers.
+  - A one-shot `kafka-init` container creates both topics; automatic topic creation is off.
+  - The v0.2 queue incidents (poison message, dead-letter build-up, slow consumer, dropped broker connection) move to Kafka.
 - **Plain HTTP/JSON between services** (httpx), with no gRPC.
 - **Latent bugs live in the service code**, behind neutrally named settings in `.env` that are off by default. Step 4's lab turns them on; nothing has to be sanitized.
-- **Observability stack A, the alert approach, the smoke test and CI** carry over from ADR 3. The alerts are renamed for the new services, and RabbitMQ backlog and dead-letter alerts replace Kafka lag.
+- **Observability stack A, the alert approach, the smoke test and CI** carry over from ADR 3. The alerts are renamed for the new services. `OrdersBacklogHigh` uses the fulfillment group's consumer lag, and `OrdersDeadLettered` fires on new messages in `orders.dlq`.
 - **Licensed MIT.**
 
 ### How the incident catalog maps
@@ -34,15 +39,22 @@ Shopfront is our own system, all Python.
 | 4 | Catalog error for one product | `CATALOG_TEXT_NORMALIZATION=ascii`: the ASCII normalizer has no mapping for "é", so `POT-MOKA` returns 500 | CatalogErrorRateHigh |
 | 5 | Recommendation memory leak | `RECOMMENDATION_CACHE=v2`: vectors are cached per (session, product) with no eviction. Memory climbs until the container is OOM-killed and restarts, after a few minutes. | RecommendationLatencyHigh / ContainerRestarting |
 | 6 | Cart store hang | `docker pause valkey` | CartLatencyHigh, CartErrorRateHigh |
-| 7 | Slow order consumer | CPU limit on `fulfillment`; invoice signing costs about 0.3 s of CPU per order | OrdersBacklogHigh |
+| 7 | Slow order consumer | CPU limit on `fulfillment`; invoice signing costs about 0.3 s of CPU per order. With `--cpus 0.02`, lag reached 54 and the alert fired after 4 minutes. | OrdersBacklogHigh |
 | 8 | Bad config release | Shipping redeployed as a new version with a wrong `DATABASE_URL`. It starts, reports connection refused on every quote and shows the new `service.version`. | ShippingErrorRateHigh |
 | 9 | Traffic surge | Load generator users ×N | StorefrontTrafficSurge, StorefrontLatencyHigh |
 | 10 | Packet loss to catalog | netem on `catalog` | StorefrontLatencyHigh |
 
-Pausing Valkey (incident 6) was verified on the running stack: cart, checkout and storefront alerts fired within 110 s. The latent bugs for incidents 3, 4 and 5 were triggered by hand. Step 4 adds an injection for every incident and tunes the thresholds.
+Verified on the running stack:
+
+- Pausing Valkey (incident 6) fired the cart, checkout and storefront alerts within 110 s.
+- Throttling fulfillment (incident 7) fired the backlog alert.
+- A malformed message published by hand was dead-lettered and fired `OrdersDeadLettered`.
+- The latent bugs for incidents 3, 4 and 5 were triggered by hand.
+
+Step 4 adds an injection for every incident and tunes the thresholds.
 
 ## Consequences
 
-- Footprint drops to 18 containers and about 1.4 GiB.
+- Footprint: 18 containers plus a one-shot topic initializer, about 1.6 GiB in total (Kafka 364 MiB).
 - Discovery now targets an all-Python repo. Polyglot coverage comes from the discovery eval's other sample repos.
 - The latent-bug settings are visible in shopfront's `.env`, but their names describe ordinary features. Step 4's leak check has to confirm they don't give the answers away.
