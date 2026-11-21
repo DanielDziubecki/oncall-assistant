@@ -15,6 +15,7 @@ oncall = "oncall.cli:main"
 
 [dependency-groups]
 dev = [
+    "factory",
     "pyright>=1.1.400",
     "pytest>=8.4",
     "ruff>=0.12",
@@ -24,9 +25,16 @@ dev = [
 requires = ["uv_build>=0.8,<0.12"]
 build-backend = "uv_build"
 
+[tool.uv.workspace]
+members = ["factory"]
+
+[tool.uv.sources]
+factory = { workspace = true }
+
 [tool.ruff]
 line-length = 100
 target-version = "py313"
+src = ["src", "factory/src"]
 
 [tool.ruff.lint]
 select = [
@@ -42,7 +50,7 @@ select = [
 ]
 
 [tool.pyright]
-include = ["src", "tests"]
+include = ["src", "tests", "factory/src"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 

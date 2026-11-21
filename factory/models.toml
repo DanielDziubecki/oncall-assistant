@@ -1,0 +1,26 @@
+# Which model each harness uses for each size of job.
+#
+# Factory jobs ask for a size, never for a model:
+#   small  fast, cheap helper work (critics, gatherers, judges of short answers)
+#   large  hard work (planning, reviews of whole changes)
+#
+# An empty value means "the harness's own default": the model you chose in that
+# harness. `effort` is the harness's reasoning level (Claude: --effort; Codex:
+# model_reasoning_effort). To compare models for one run, use
+# `factory ask --model ... --effort ...` instead of editing this file.
+
+[claude.small]
+model = "haiku" # an alias that follows the newest small Claude model
+effort = ""
+
+[claude.large]
+model = ""
+effort = ""
+
+[codex.small]
+model = "" # set a small Codex model here; `codex debug models` lists them
+effort = "low"
+
+[codex.large]
+model = ""
+effort = ""

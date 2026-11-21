@@ -4,7 +4,7 @@
 
 A vendor-agnostic, read-only AI agent that investigates production incidents like a senior on-call engineer.
 
-> **Status:** early development (v0.1, step 1 of 26). The sections below describe the target design; most of it is not built yet.
+> **Status:** early development (v0.1). The sections below describe the target design; most of it is not built yet.
 
 ## What it does
 
@@ -14,7 +14,7 @@ A vendor-agnostic, read-only AI agent that investigates production incidents lik
 
 ## How it's evaluated
 
-On every PR, the agent runs against a catalog of incidents injected invisibly into a polyglot microservices system ([shopfront](https://github.com/DanielDziubecki/shopfront), a sanitized OpenTelemetry Demo fork) on two backend stacks: Prometheus / Loki / Tempo and Datadog. The evals measure:
+On every PR, the agent runs against a catalog of incidents injected invisibly into a microservices system written for this project ([shopfront](https://github.com/DanielDziubecki/shopfront): Python services, PostgreSQL, Valkey and Kafka) on two backend stacks: Prometheus / Loki / Tempo and Datadog. The evals measure:
 
 - **Root-cause accuracy** against two simpler baselines (a rule-based ranker and a single LLM call without tools).
 - **Evidence grounding**: how much of the cited evidence actually exists in the tool results, rather than being hallucinated.
@@ -38,6 +38,8 @@ uv run oncall --version
 ```
 
 Architecture decisions are recorded in [`docs/adr/`](docs/adr/).
+
+The project is built with a small development factory that runs Claude Code and Codex as interchangeable workers. See the [factory plan](docs/factory/plan.md), and run `uv run factory doctor` to check a machine for it.
 
 ## License
 
