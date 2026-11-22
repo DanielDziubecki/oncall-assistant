@@ -4,6 +4,10 @@ Sets up the VPS that runs Main, the factory and shopfront, from a fresh server. 
 Ubuntu 24.04 LTS; other Debian-based systems need small changes. Target size: 16 GB RAM,
 4 vCPU and at least 40 GB of free disk.
 
+**Scripted:** [`scripts/vps-setup.sh`](../../scripts/vps-setup.sh) does steps 1–7 except the logins,
+run from your computer by Claude Code over SSH. Start with
+[`run-setup-from-your-computer.md`](run-setup-from-your-computer.md); this page explains why each step exists.
+
 Steps marked **You** need your accounts or your computer. Once Claude Code is installed
 (step 2), it can do the rest with you: start `claude` in your home directory and say
 *"Read https://github.com/DanielDziubecki/oncall-assistant/blob/main/docs/factory/vps-setup.md
