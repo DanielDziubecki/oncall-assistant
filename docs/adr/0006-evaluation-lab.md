@@ -1,4 +1,4 @@
-# 5. Evaluation lab: fault injection and leak check
+# 6. Evaluation lab: fault injection and leak check
 
 Date: 2026-11-01 · Status: accepted
 
