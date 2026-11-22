@@ -9,6 +9,7 @@ These are the instructions for every coding agent in this repo, whichever harnes
 - `make install` — `uv sync --locked`
 - `make check` — ruff lint + format check, pyright (strict), pytest. Must pass before every commit.
 - `make format` — auto-fix lint and formatting
+- `uv run lab ...` — evaluation lab (`up`, `scenarios`, `inject`, `reset`, `leakcheck`); needs a shopfront checkout at `../shopfront` or `LAB_TARGET`
 - `make schemas` — regenerate `schemas/` after changing a capability, `Diagnosis` or `Hypothesis` model; commit the result
 
 ## Rules
@@ -17,5 +18,6 @@ These are the instructions for every coding agent in this repo, whichever harnes
 - pyright strict: every function, including tests, is fully annotated.
 - The agent zone must never hold secrets. Never commit keys, tokens or `.env` files.
 - Nothing from `factory/` goes into product containers, `knowledge/` or the shopfront repo.
+- Nothing from `lab/` (scenario ids, canaries, injection details) may ever reach the target repo or the agent. `lab leakcheck` enforces this; a new lab artifact that could leak needs a denylist entry in `lab/leakcheck/denylist.yml`.
 - Any decision that changes the plan gets an ADR in `docs/adr/` (numbered, short: Context / Decision / Consequences).
 - Write in English.

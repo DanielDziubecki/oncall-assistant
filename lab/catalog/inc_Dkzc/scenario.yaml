@@ -1,0 +1,13 @@
+id: inc_Dkzc
+title: Slow order consumer
+tier: nightly
+warmup_s: 120
+injection:
+  - {kind: cpu_limit, container: fulfillment, cpus: 0.02}
+ready_when: {alert: OrdersBacklogHigh, timeout_s: 600}
+ground_truth:
+  component: fulfillment
+  fault_type: slow_consumer
+  mechanism: "fulfillment is starved of CPU, invoice signing slows down and consumer lag on the orders topic grows while checkout stays healthy"
+  required_evidence_kinds: [metric, resource]
+canary: "cnry-09b79a"

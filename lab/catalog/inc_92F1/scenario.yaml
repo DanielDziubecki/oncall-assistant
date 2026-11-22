@@ -1,0 +1,13 @@
+id: inc_92F1
+title: Catalog error for one product
+tier: nightly
+warmup_s: 120
+injection:
+  - {kind: settings, service: catalog, env: {CATALOG_TEXT_NORMALIZATION: ascii}}
+ready_when: {alert: CatalogErrorRateHigh, timeout_s: 300}
+ground_truth:
+  component: catalog
+  fault_type: application_error
+  mechanism: "ASCII text normalization has no mapping for a non-ASCII character in one product's description, so that product's detail requests fail with 500"
+  required_evidence_kinds: [log, trace]
+canary: "cnry-f59227"

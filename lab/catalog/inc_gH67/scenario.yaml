@@ -1,0 +1,14 @@
+id: inc_gH67
+title: Cart store hang
+tier: pr
+warmup_s: 120
+injection:
+  - {kind: pause, container: valkey}
+ready_when: {alert: CartLatencyHigh, timeout_s: 300}
+ground_truth:
+  component: valkey
+  fault_type: dependency_unreachable
+  mechanism: "the cart's Valkey instance stops responding, so cart calls time out after 3 s and fail"
+  acceptable_components: [cart->valkey]
+  required_evidence_kinds: [trace, log]
+canary: "cnry-46d38a"

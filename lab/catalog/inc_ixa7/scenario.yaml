@@ -1,0 +1,12 @@
+id: inc_ixa7
+title: No fault (harmless noise)
+tier: nightly
+warmup_s: 120
+injection:
+  - {kind: restart, container: loadgen}
+ready_when: null
+ground_truth:
+  component: null
+  fault_type: none
+  mechanism: "the load generator restarts, causing a brief traffic dip and expected warnings; nothing is broken"
+canary: "cnry-d3ac74"

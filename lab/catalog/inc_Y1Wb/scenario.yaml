@@ -1,0 +1,10 @@
+id: inc_Y1Wb
+title: No fault (baseline 2)
+tier: nightly
+warmup_s: 120
+ready_when: null
+ground_truth:
+  component: null
+  fault_type: none
+  mechanism: "normal traffic, nothing injected"
+canary: "cnry-e8f6ea"

@@ -1,0 +1,13 @@
+id: inc_YYEI
+title: Payment charge bug
+tier: pr
+warmup_s: 120
+injection:
+  - {kind: settings, service: payment, env: {PAYMENT_TOKEN_CACHE: v2}}
+ready_when: {alert: CheckoutErrorRateHigh, timeout_s: 300}
+ground_truth:
+  component: payment
+  fault_type: application_error
+  mechanism: "the v2 token cache keys tokens by card BIN, so cards sharing a BIN get another card's token and the charge is rejected as an invalid token (about 30% of checkouts)"
+  required_evidence_kinds: [trace, log]
+canary: "cnry-1cac59"

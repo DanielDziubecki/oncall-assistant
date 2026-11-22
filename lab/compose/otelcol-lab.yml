@@ -1,0 +1,7 @@
+# Merged over the target's collector config by the lab overlay.
+# Keeps lab containers (proxies, netem sidecars) out of the container metrics.
+receivers:
+  docker_stats:
+    excluded_images:
+      - "*toxiproxy*"
+      - "*netshoot*"

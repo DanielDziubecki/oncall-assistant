@@ -14,3 +14,7 @@ htmlcov/
 .DS_Store
 .idea/
 .vscode/
+
+# Local lab state and CI checkouts
+.target/
+lab/.state/

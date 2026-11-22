@@ -1,0 +1,23 @@
+# Terms that must never appear in anything the agent can see: the target repo and its
+# history, telemetry, alerts. Patterns are case-insensitive regular expressions.
+# Scenario ids and canary tokens from the catalog are added automatically.
+patterns:
+  - chaos
+  - inject
+  - toxi
+  - flagd
+  - openfeature
+  - feature_flag
+  - netem
+  - netshoot
+  - scenario
+  - ground.?truth
+  - lab-edge-proxy
+  - payment-real
+  - "inc_[A-Za-z0-9]{4}\\b"
+  - "cnry-[0-9a-f]{6}"
+
+# A match is ignored when the whole line matches one of these.
+allow:
+  - pattern: "propagate\\.inject\\("
+    reason: OpenTelemetry context propagation API (fulfillment publishes trace context to the dead-letter topic)

@@ -1,0 +1,13 @@
+id: inc_UJ0n
+title: Payment unreachable
+tier: pr
+warmup_s: 120
+injection:
+  - {kind: toxic, proxy: payment, type: reset_peer, attributes: {timeout: 0}}
+ready_when: {alert: CheckoutErrorRateHigh, timeout_s: 300}
+ground_truth:
+  component: payment
+  fault_type: dependency_unreachable
+  mechanism: "connections from checkout to payment are reset, so every charge fails and checkout returns 502"
+  required_evidence_kinds: [trace, log]
+canary: "cnry-fa283c"

@@ -1,0 +1,13 @@
+id: inc_eCqe
+title: Recommendation memory leak
+tier: nightly
+warmup_s: 120
+injection:
+  - {kind: settings, service: recommendation, env: {RECOMMENDATION_CACHE: v2}}
+ready_when: {alert: ContainerRestarting, timeout_s: 900}
+ground_truth:
+  component: recommendation
+  fault_type: memory_leak
+  mechanism: "the v2 vector cache adds an entry per session and product and never evicts, so memory grows until the container is OOM-killed and restarts"
+  required_evidence_kinds: [resource, metric]
+canary: "cnry-272c30"

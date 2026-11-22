@@ -1,0 +1,13 @@
+id: inc_mmul
+title: Payment network latency
+tier: pr
+warmup_s: 120
+injection:
+  - {kind: toxic, proxy: payment, type: latency, attributes: {latency: 3000, jitter: 500}}
+ready_when: {alert: CheckoutLatencyHigh, timeout_s: 300}
+ground_truth:
+  component: checkout->payment
+  fault_type: network_latency
+  mechanism: "about 3 s of added network latency between checkout and payment; payment's own processing time is normal"
+  required_evidence_kinds: [trace, metric]
+canary: "cnry-2cdedc"

@@ -1,0 +1,10 @@
+id: inc_0Nk5
+title: No fault (baseline 1)
+tier: pr
+warmup_s: 120
+ready_when: null
+ground_truth:
+  component: null
+  fault_type: none
+  mechanism: "normal traffic, nothing injected"
+canary: "cnry-97ced4"

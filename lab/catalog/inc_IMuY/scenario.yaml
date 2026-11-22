@@ -1,0 +1,14 @@
+id: inc_IMuY
+title: Packet loss to catalog
+tier: nightly
+warmup_s: 120
+injection:
+  - {kind: packet_loss, container: catalog, percent: 20}
+ready_when: {alert: CheckoutLatencyHigh, timeout_s: 600}
+ground_truth:
+  component: catalog
+  fault_type: packet_loss
+  mechanism: "20% of catalog's outgoing packets are dropped, so TCP retransmits and calls to catalog (and catalog's own database calls) get sporadic latency spikes; no errors, CPU and memory are normal"
+  acceptable_components: [storefront->catalog]
+  required_evidence_kinds: [trace, metric]
+canary: "cnry-0bb394"

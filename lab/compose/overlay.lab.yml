@@ -1,0 +1,46 @@
+# Lab overlay for shopfront. Applied on top of the target's compose files by `lab up`;
+# never part of the target repository. Paths use ${LAB_DIR} because relative paths resolve
+# from the target's directory.
+#
+# Toxiproxy takes over the `payment` hostname: on the shared network the name resolves to
+# the proxy, and the real payment service only lives on a private lab network as
+# `payment-real`. Checkout keeps calling http://payment:8000 and nothing in its config,
+# traces or logs changes.
+
+networks:
+  lab-payment:
+    name: lab-payment
+
+services:
+  edge-proxy:
+    image: ${TOXIPROXY_IMAGE:-ghcr.io/shopify/toxiproxy:2.12.0}
+    container_name: lab-edge-proxy
+    command: ["-host=0.0.0.0", "-config=/config/toxiproxy.json"]
+    volumes:
+      - ${LAB_DIR}/compose/toxiproxy.json:/config/toxiproxy.json:ro
+    ports:
+      - "127.0.0.1:${TOXIPROXY_API_PORT:-8474}:8474"
+    networks:
+      default:
+        aliases: [payment]
+      lab-payment: {}
+    restart: unless-stopped
+
+  payment:
+    networks:
+      lab-payment:
+        aliases: [payment-real]
+
+  checkout:
+    depends_on:
+      edge-proxy: { condition: service_started }
+
+  # Payment exports telemetry from the lab network, so the collector joins it too. A second
+  # config file keeps lab containers out of the container metrics.
+  otel-collector:
+    networks:
+      default: {}
+      lab-payment: {}
+    command: ["--config=/etc/otelcol/config.yml", "--config=/etc/otelcol/lab.yml"]
+    volumes:
+      - ${LAB_DIR}/compose/otelcol-lab.yml:/etc/otelcol/lab.yml:ro
