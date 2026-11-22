@@ -5,9 +5,9 @@ on the VPS over SSH, one section at a time, and explains each one. You approve e
 The script is the repeatable version of [`vps-setup.md`](vps-setup.md), which explains why
 each step exists.
 
-Tested in an Ubuntu 24.04 container: the `user`, `tools`, `repos` and `check` sections, run
-twice, and the safety refusals of `harden`. Not testable in a container, so first tested on
-your VPS: `base` (the firewall), `docker` (the daemon) and the SSH restart in `harden`.
+Every section, `ssh-access` and `harden` included, worked on a real Ubuntu 24.04 VPS on
+2026-11-22. That server already had a firewall, Tailscale and an `AllowUsers` list; a fresh
+server has only been tried in a container (`user`, `tools`, `repos` and `check`).
 
 ## 1. You: on your Windows computer
 
@@ -36,15 +36,26 @@ key. Replace `<vps-ip>` with your server's address:
 type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh root@<vps-ip> "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
-Then add this to `%USERPROFILE%\.ssh\config` (create the file if it doesn't exist):
+Then add this to `%USERPROFILE%\.ssh\config` (create the file if it doesn't exist). `vps` is
+root, for the setup; `vps-dev` is your everyday login. If the server is on Tailscale, use its
+Tailscale name as both `HostName`s. If your key has another name, change `IdentityFile`.
 
 ```
 Host vps
     HostName <vps-ip>
     User root
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+
+Host vps-dev
+    HostName <vps-ip>
+    User dev
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
 ```
 
-`ssh vps` should now log you in without a password.
+Run `ssh vps` once yourself and accept the server's fingerprint; Claude Code can't answer that
+question. From then on it should log you in without a password.
 
 ## 3. Claude Code: run the setup
 
@@ -57,8 +68,8 @@ in this order: base, user, docker, tools, repos, check.
 Before each section, tell me in two sentences what it changes and why. After it, tell me
 what happened. If a section fails, explain the cause and propose a fix to the script; don't
 work around it on the server by hand.
-Never run the harden section yourself, never handle my passwords or logins, and stop after
-check to give me the list of what is left for me.
+Never run the ssh-access or harden sections yourself, never handle my passwords or logins,
+and stop after check to give me the list of what is left for me.
 ```
 
 ## 4. You: logins and the password
@@ -66,31 +77,54 @@ check to give me the list of what is left for me.
 `check` ends with a list of what is left. In your own terminal:
 
 1. `ssh vps`, then `passwd dev` to give `dev` a password (sudo needs it).
-2. `ssh dev@<vps-ip>`, then log in to each tool: `claude`, `codex login --device-auth`, `gh auth login` and `gh auth setup-git`.
+2. `ssh vps-dev`, then log in to each tool: `claude`, `codex login --device-auth`, `gh auth login` and `gh auth setup-git`.
+   Use a GitHub account without admin rights, approve it in a private browser window, and
+   check that `gh api user --jq .login` names that account.
 3. While still logged in as `dev`, run `sudo true` to prove sudo works.
 
 If SSH refuses `dev`, the server may have an `AllowUsers` list. You can still do steps 2 and 3
 from a root session with `su - dev`. To let `dev` in from your Tailscale network, run this
-yourself in Git Bash, then log in through the server's Tailscale name:
+yourself in PowerShell, in the repo folder (PowerShell itself rejects the `<`, so it goes
+through Git Bash), then log in with `ssh vps-dev`:
 
-```bash
-ssh vps 'bash -s -- ssh-access' < scripts/vps-setup.sh
+```powershell
+& "C:\Program Files\Git\bin\bash.exe" -c "ssh vps 'bash -s -- ssh-access' < scripts/vps-setup.sh"
 ```
 
 ## 5. You: close root login
 
-Only after step 4 worked, including a real SSH login as `dev` (`su - dev` doesn't count, and
-`harden` checks). This also ends any root fallback login, so make sure you can reach your
-provider's console. From your computer, in Git Bash (PowerShell rejects the `<`):
+`harden` ends every root SSH login, fallbacks included. Before you run it:
 
-```bash
-ssh vps 'CONFIRM_DEV_LOGIN=yes bash -s -- harden' < scripts/vps-setup.sh
+1. Make sure step 4 worked, including a real `ssh vps-dev` login (`su - dev` doesn't count,
+   and `harden` checks).
+2. **If you reach the server over Tailscale, turn off its key expiry** (Machines → the server →
+   Disable key expiry). Otherwise you are locked out on the day the key expires.
+3. **Test your provider's console:** log in there as `dev`, run `sudo true`, then `exit`. It
+   will be your only rescue, and its keyboard layout may garble your password.
+4. Open `ssh vps` in another terminal and keep it open until you have tested the result.
+
+Then, in PowerShell in the repo folder:
+
+```powershell
+& "C:\Program Files\Git\bin\bash.exe" -c "ssh vps 'CONFIRM_DEV_LOGIN=yes bash -s -- harden' < scripts/vps-setup.sh"
 ```
 
-Then change `User root` to `User dev` in `%USERPROFILE%\.ssh\config`. From now on you log
-in as `dev`, and root login is off.
+In a new terminal, `ssh vps-dev` must work and `ssh vps` must be refused. If `vps-dev` fails,
+undo it in the session you kept open, or on the console with `sudo` in front of both commands:
+
+```bash
+rm /etc/ssh/sshd_config.d/00-hardening.conf
+systemctl restart ssh
+```
+
+From now on you log in with `ssh vps-dev`. The `ssh vps` commands above no longer work, so run
+a section on the server instead:
+
+```bash
+cd ~/src/oncall-assistant && git pull && sudo bash scripts/vps-setup.sh check
+```
 
 ## 6. Then
 
-The Herdr app (step 6 of `vps-setup.md`, with the `vps` host from your SSH config) and the
-Pi trial (step 8).
+The Herdr app (step 6 of `vps-setup.md`, with the `vps-dev` host from your SSH config) and the
+Pi trial (step 8; the script already installed Pi).

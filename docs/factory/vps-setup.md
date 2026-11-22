@@ -28,7 +28,9 @@ sudo chown -R dev:dev /home/dev/.ssh && sudo chmod 700 /home/dev/.ssh
 
 From your computer, check that `ssh dev@<vps>` works. If it doesn't, stop: turning off root
 login now would lock you out (`sudo sshd -T | grep allowusers` shows whether an allow-list is
-the cause). If it works, **keep that session open**, then turn off
+the cause). If you reach the server over Tailscale, also turn off its key expiry first, and
+in any case test that you can log in on the provider's console as `dev`: after this it is your
+only rescue. If all of that works, **keep that session open**, then turn off
 password and root login. A file of our own in `sshd_config.d` wins over the one many cloud
 images ship that turns passwords back on:
 
@@ -37,7 +39,7 @@ printf 'PasswordAuthentication no\nPermitRootLogin no\n' | sudo tee /etc/ssh/ssh
 sudo systemctl restart ssh
 ```
 
-Open a second session to confirm you can still log in. Add a `Host vps` entry for it in
+Open a second session to confirm you can still log in. Add a `Host vps-dev` entry for it in
 `~/.ssh/config` on your computer; Herdr uses it in step 6.
 
 ## 2. You: Claude Code
@@ -54,7 +56,7 @@ Run `claude`, choose your subscription account and open the link it prints. Offi
 ## 3. Agent: base packages and firewall
 
 ```bash
-sudo apt-get update && sudo apt-get install -y git make tmux gh unattended-upgrades
+sudo apt-get update && sudo apt-get install -y git make curl ca-certificates tmux gh ufw unattended-upgrades
 sudo ufw allow OpenSSH && sudo ufw --force enable
 ```
 
@@ -68,7 +70,7 @@ sudo usermod -aG docker dev
 Log out and back in, then `docker run --rm hello-world`.
 
 - **Docker group means root.** Anyone, or any agent, that can run Docker controls the whole VPS. Keep this VPS for this project only, with no other secrets on it.
-- **Published ports skip the firewall.** Docker writes its own rules, so `ufw` doesn't protect a published port. Shopfront binds every port to `127.0.0.1`; keep it that way, and open Grafana through a tunnel: `ssh -L 3000:127.0.0.1:3000 vps`, then <http://localhost:3000>.
+- **Published ports skip the firewall.** Docker writes its own rules, so `ufw` doesn't protect a published port. Shopfront binds every port to `127.0.0.1`; keep it that way, and open Grafana through a tunnel: `ssh -L 3000:127.0.0.1:3000 vps-dev`, then <http://localhost:3000>.
 
 ## 5. Agent: uv, Node and Codex
 
@@ -89,7 +91,7 @@ changes apply.
 ## 6. You: Herdr
 
 On **your computer**, install the Herdr app: <https://github.com/herdrdev/herdr-app#install>.
-In Settings → Machines, add the VPS by its SSH host (`vps`). If the VPS has no core yet, the
+In Settings → Machines, add the VPS by its SSH host (`vps-dev`, so it uses `dev`'s tools and not root's). If the VPS has no core yet, the
 app can install it; to install it by hand instead, on the VPS:
 
 ```bash
