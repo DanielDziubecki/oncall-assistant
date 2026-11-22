@@ -41,11 +41,12 @@ only on purpose, in a PR, and say why.
 | --- | --- | --- |
 | Factory | The agents, checks and commands that help build this project. Not part of the product. | `factory/` |
 | Main | The one focused conversation that plans and writes the code for a step. Only Main edits files. | |
-| Harness | A program that runs a model as a coding agent: Claude Code or Codex. | |
-| Driver | Factory code that runs one harness headless and reads its answer. | `factory/src/Factory/Drivers/`; not a product *adapter* |
+| Harness | A program that runs a model as a coding agent: Pi, Claude Code or Codex. | |
+| Provider | Where a harness gets its model: a Claude or ChatGPT subscription, or an API key. In Pi, one harness can use several providers. | |
 | Workspace | The program that hosts terminals and panes: Herdr, with tmux as a fallback. | `hc` is Herdr's command line. |
-| Size | What a factory job asks for instead of a model: `small` or `large`. | `factory/models.json` |
-| Job | One piece of factory work, such as one `factory ask`. | Not "run". |
+| Coordinator | The one factory agent Daniel talks to. It hands tasks to workers and asks Daniel for approvals. | Not *Main*: Main writes code, the coordinator delegates. |
+| Worker | A factory agent the coordinator starts for one task, in its own git worktree and sandbox. | |
+| Job | One piece of factory work, such as one headless question to a harness. | Not "run". |
 | Factory agent | A helper with one job, such as the Critic or a domain agent. It advises and never edits files. | `factory/agents/<name>/`; not an *agent under test* |
 | Finding | One short, numbered item a factory agent reports. It reaches Main only when Daniel sends it. | |
 | Expectations | Do / Expect / Never lines a factory agent must pass in the bench. Never loosened to make a report pass. | `expectations.md` |

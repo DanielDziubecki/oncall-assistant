@@ -1,9 +1,0 @@
-#!/bin/sh
-# Runs the factory tool from this repo. `make factory` rebuilds it after you change its code;
-# if it was never built, this builds it once.
-root=$(cd "$(dirname "$0")/.." && pwd)
-dll="$root/factory/src/Factory/bin/Release/net10.0/factory.dll"
-if [ ! -f "$dll" ]; then
-    dotnet build "$root/factory/src/Factory" -c Release -v quiet >&2 || exit 1
-fi
-exec dotnet "$dll" "$@"

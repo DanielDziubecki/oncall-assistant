@@ -1,26 +1,27 @@
-# 5. A harness-neutral development factory
+# 5. A development factory modelled on a private AI lab
 
-Date: 2026-11-21 · Status: accepted
+Date: 2026-11-22 · Status: accepted
 
 ## Context
 
-The project is built with coding agents, one step and one PR at a time. Building it is also how Daniel learns to build AI systems and workflows, following the MEGA course: one focused conversation, Main, with small helper agents around it, each tested before it is trusted. Daniel has Claude Code and Codex subscriptions and wants to use both as agents without depending on either vendor. Main runs on a 16 GB VPS, in the Herdr workspace.
+The project is built with coding agents, one step and one PR at a time. Building it is also how Daniel learns to build AI systems and workflows, following the MEGA course. The course shows several ways to run such a "factory", from one conversation with small helpers (S04 build guides) to a coordinator delegating to workers (S01E04, S04E03a). The course author runs the most autonomous version as a private AI lab: one coordinator he talks to, workers in per-project sandboxes, secrets injected per project, an action monitor that checks every agent action, and approvals for anything critical. Daniel wants a setup like that.
+
+Daniel has Claude Code and Codex subscriptions, a 16 GB VPS, and wants no dependency on one vendor. Two ways of using those subscriptions are open:
+
+- **Claude Code and Codex** as two separate harnesses, with factory code in between. A first version of that code (C#, .NET 10) is kept on the `factory-dotnet-drivers` branch.
+- **Pi** as the one harness, with Claude and OpenAI as providers inside it: Claude through the `pi-claude-code` extension, ChatGPT through Pi's own login.
 
 ## Decision
 
-- **The factory is files and one small command in this repo.** `AGENTS.md` holds the instructions for every harness; Codex reads it and `CLAUDE.md` imports it with `@AGENTS.md`. Factory rules and model sizes live in `factory/`. The `factory` tool is the only code that starts a harness.
-- **The factory is C# on .NET 10, the product stays Python.** Daniel knows .NET well, so the factory teaches agent design without a language in the way, while the product teaches Python. The tool is a .NET console app (a dotnet tool, command `factory`) with xUnit tests; warnings are errors and nullable checks are on. File-based C# scripts are fine for occasional jobs, but hooks call the compiled tool: measured on the same machine, a cached script starts in about 1.6 s and the tool in about 0.1 s.
-- **Harnesses are workers behind drivers.** A driver turns one job into one headless command (`claude -p`, `codex exec`) and reads the answer into one shape: text, model, time, tokens and cost. Jobs ask for a size, `small` or `large`, and `factory/models.json` maps sizes to models per harness. Adding a harness means one driver and one entry.
-- **A factory job sees only its prompt.** Claude runs with `--safe-mode --tools ""`; Codex runs with `--sandbox read-only --disable hooks`. Neither loads the project's hooks, so the factory's own hooks can't trigger themselves.
+- **Direction: a private AI lab at the scale of one VPS.** Safety comes before autonomy: isolation, injected secrets and the action monitor exist before agents run unattended. The stages are in [`docs/factory/plan.md`](../factory/plan.md).
+- **Workspace: Herdr.** The Herdr app runs on Daniel's computer and herdr-core (`hc`) on the VPS, so terminals keep running when the laptop is closed.
+- **Harness: decided by a trial on the VPS.** The trial ([`vps-setup.md`](../factory/vps-setup.md), step 8) runs Pi with both subscriptions. If it works, Pi is the harness. If not, Claude Code and Codex stay, and the code on `factory-dotnet-drivers` is reused. A follow-up ADR records the result.
+- **No factory code until the trial decides it.** This PR holds only what every option needs: `AGENTS.md`, the glossary, the rules, the capability map and the VPS guide.
 - **Subscriptions build; API keys measure.** The factory runs on Daniel's subscriptions. The benchmark's Claude Code setups keep the metered API key held by the credential proxy, as the plan says: a subscription login can't sit behind the proxy, and its runs can't be priced or pinned the same way.
-- **Workspace: Herdr, with tmux as a fallback.** The Herdr app runs on Daniel's computer and herdr-core (`hc`) on the VPS. Factory code drives terminals through `hc` (run, send, read, keys, wait), the same operations tmux offers.
-- **One meaning per word.** `GLOSSARY.md` separates factory terms from product terms. The factory's black-box tester is the *bench*, because *lab* is the incident lab; a *driver* runs a harness, while an *adapter* talks to a backend.
+- **One meaning per word.** `GLOSSARY.md` separates factory terms from product terms. The factory's black-box tester is the *bench*, because *lab* is the incident lab.
 
 ## Consequences
 
-- Harness features with different formats (subagents, MCP config) are generated from one source when the factory first needs them. Skills share one format and differ only in folder. [`docs/factory/capabilities.md`](../factory/capabilities.md) records what each harness supports.
-- The Codex driver is tested against synthetic events until the first run on the VPS records real ones.
-- Factory tests use fake harness executables and never call a model, so CI needs no model key.
+- Headless use of a Claude subscription (`claude -p`, which `pi-claude-code` also relies on) may move to separate, smaller credits billed at API rates. Anthropic announced this in May 2026 and has put it on hold. No part of the factory may depend on that staying free of extra cost, and keeping a second vendor ready is part of the design.
+- Until the trial, `CLAUDE.md` imports `AGENTS.md`. Pi reads `AGENTS.md` and `CLAUDE.md` from the working folder; the trial checks that it doesn't load the instructions twice.
 - The factory's model use is separate from the product's $40/month LLM cap.
-- The repo needs two toolchains, uv and the .NET 10 SDK; `make check` and CI run both.
-- The factory stays in this repo for now. It moves to its own repo when a second project needs it, when it gets in the product's way, or once it has stabilized. Already coupled: the doctor's project-specific checks (Docker for shopfront) and the paths to this repo's docs. Model choices belong to the person, not the project. `models.json` is found by searching upward from the working directory, so the tool doesn't depend on where it's installed.

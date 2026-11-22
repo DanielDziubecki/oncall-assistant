@@ -64,21 +64,19 @@ Log out and back in, then `docker run --rm hello-world`.
 - **Docker group means root.** Anyone, or any agent, that can run Docker controls the whole VPS. Keep this VPS for this project only, with no other secrets on it.
 - **Published ports skip the firewall.** Docker writes its own rules, so `ufw` doesn't protect a published port. Shopfront binds every port to `127.0.0.1`; keep it that way, and open Grafana through a tunnel: `ssh -L 3000:127.0.0.1:3000 vps`, then <http://localhost:3000>.
 
-## 5. Agent: uv, .NET, Node and Codex
+## 5. Agent: uv, Node and Codex
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0
-echo 'export DOTNET_ROOT="$HOME/.dotnet"; export PATH="$HOME/.dotnet:$PATH"' >> ~/.bashrc
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 npm config set prefix ~/.local
 npm install -g @openai/codex
 ```
 
-uv runs the Python product, the .NET 10 SDK builds the factory (installed into `~/.dotnet`
-without `sudo`), and Node runs Codex. `~/.local/bin` (uv, Codex) must be on `PATH`; the uv
-installer offers to add it. Open a new shell afterwards so the `PATH` changes apply.
+uv runs the Python product, and Node runs Codex and Pi. `~/.local/bin` (uv, Codex) must be
+on `PATH`; the uv installer offers to add it. Open a new shell afterwards so the `PATH`
+changes apply.
 
 **You:** run `codex login --device-auth` and sign in with your ChatGPT account.
 
@@ -94,24 +92,74 @@ curl -fsSL https://releases.herdr.dev/core/install.sh | sh
 
 Terminals you open on the VPS keep running when you close the app or your laptop.
 
-## 7. Agent: the repos and the factory check
+## 7. Agent: the repos and a first headless answer
 
 ```bash
 mkdir -p ~/src && cd ~/src
 git clone https://github.com/DanielDziubecki/oncall-assistant.git
 git clone https://github.com/DanielDziubecki/shopfront.git
 cd oncall-assistant && make install && make check
-bin/factory doctor
 ```
 
 **You:** run `gh auth login`, then `gh auth setup-git`, so agents can push branches and open PRs.
 
-The VPS is ready when `factory doctor` reports no failures and both harnesses answer:
+Both subscriptions should answer one question without a conversation and without tools:
 
 ```bash
-bin/factory ask --harness claude "Reply with OK"
-bin/factory ask --harness codex "Reply with OK"
+echo "Reply with OK" | claude -p --tools "" --safe-mode
+echo "Reply with OK" | codex exec --sandbox read-only --ephemeral -
 ```
+
+## 8. You and Agent: the Pi trial
+
+This step decides the factory's harness (ADR 5). Pi would be the one harness, with your
+Claude and ChatGPT subscriptions as providers inside it. Note each result as you go.
+
+1. **Install Pi** (it needs Node 22.19 or newer, from step 5):
+
+   ```bash
+   curl -fsSL https://pi.dev/install.sh | sh
+   ```
+
+2. **Claude through your subscription.** Install the extension, which routes Pi's Claude requests through Claude Code (`claude -p`), using the login from step 2:
+
+   ```bash
+   pi install https://github.com/earendil-works/pi-claude-code
+   ```
+
+   Start `pi`, run `/claude-code-status`, then pick a model from the "Claude Code Subscription (Experimental)" provider with `/model`.
+
+3. **ChatGPT through your subscription.** In `pi`, run `/login`, choose OpenAI, and sign in with your ChatGPT account. On a VPS, paste the final redirect URL or code back into Pi when it asks.
+
+4. **One headless answer from each:**
+
+   ```bash
+   pi --list-models
+   ```
+
+   ```bash
+   pi -p --mode json --no-tools --model <a Claude model from the list> "Reply with OK" > claude.jsonl
+   ```
+
+   ```bash
+   pi -p --mode json --no-tools --model <an OpenAI model from the list> "Reply with OK" > openai.jsonl
+   ```
+
+5. **The course's extensions in Herdr.** Install John's lab and agent extensions, then run `/lab doctor` inside `pi` in a Herdr pane:
+
+   ```bash
+   pi install git:github.com/johnlindquist/herdr-pi-lab
+   ```
+
+   ```bash
+   pi install git:github.com/johnlindquist/herdr-pi-role
+   ```
+
+6. **Instructions load once.** In this repo, ask Pi what instructions it loaded. `AGENTS.md` should appear once; `CLAUDE.md` contains only `@AGENTS.md`.
+
+**The trial passes** when steps 2–6 work. Then Pi is the harness. If Claude or ChatGPT
+can't be used from Pi, Claude Code and Codex stay the harnesses. Either way, keep
+`claude.jsonl` and `openai.jsonl`: they are real samples the factory's tests can use.
 
 ## What never goes on this VPS's containers
 

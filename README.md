@@ -39,7 +39,7 @@ uv run oncall --version
 
 Architecture decisions are recorded in [`docs/adr/`](docs/adr/).
 
-The project is built with a small development factory that runs Claude Code and Codex as interchangeable workers. See the [factory plan](docs/factory/plan.md), and run `bin/factory doctor` to check a machine for it.
+The project is built with a development factory: a coordinator and worker agents on a VPS, modelled on a private AI lab. See the [factory plan](docs/factory/plan.md).
 
 ## License
 

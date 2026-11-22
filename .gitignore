@@ -14,7 +14,3 @@ htmlcov/
 .DS_Store
 .idea/
 .vscode/
-
-# .NET build output of the factory
-factory/**/bin/
-factory/**/obj/

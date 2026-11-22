@@ -40,7 +40,32 @@ Re-check a row before relying on it after a harness update.
 - **Skills share a format.** They are written once in `.agents/skills/` and linked from `.claude/skills/` when the first one is added.
 - **Subagents and MCP config differ.** They are generated from one definition in `factory/agents/` when first needed.
 - **Messages to Main go through the workspace** (`hc send`), which works the same for both harnesses.
-- **Codex has no per-run spend cap.** The driver's timeout bounds every run, and subscription limits bound Codex spend.
+- **Codex has no per-run spend cap.** A timeout around every run, and subscription limits, bound Codex spend.
+
+## Pi
+
+Pi is one open-source harness that uses many providers. It is the candidate to replace
+Claude Code and Codex as harnesses, with both subscriptions as providers (ADR 5; the trial
+is step 8 of [`vps-setup.md`](vps-setup.md)). Sources: Pi's `README.md` and `docs/`
+(`cli.md`, `models.md`, `providers.md`, `configuration.md`), the `pi-claude-code` README,
+and how the course's RentAPlace code calls Pi.
+
+| Capability | Pi | Source |
+| --- | --- | --- |
+| Headless run | `pi -p --mode json "..."` writes events as JSONL; `--mode rpc` and a TypeScript SDK also exist | docs |
+| No tools, no project context | `--no-tools`, `--no-mcp`, and flags that skip extensions, skills, prompts and context files (RentAPlace uses `-ne -ns -np -nc`) | docs, course code |
+| Instructions | Reads `AGENTS.md` and `CLAUDE.md` from the agent folder, the working folder and its parents; `AGENTS.override.md` replaces them in its folder | docs |
+| Claude subscription | The `pi-claude-code` extension sends Claude requests through `claude -p`; Claude Code runs no tools itself. Experimental. | extension README |
+| ChatGPT subscription | `/login`, then OpenAI, signing in with ChatGPT | docs |
+| Models | `pi --list-models`; `--model <provider>/<model>` | docs, course code |
+| Extensions | TypeScript, installed with `pi install`; can add commands, tools, hooks on tool calls and keys | docs |
+| Subagents | Not built in; added by extensions or by starting more Pi instances (in Herdr) | README |
+| Secrets | A provider key in `auth.json` can be a command such as `!op read ...`, run when the key is first needed | docs |
+
+**Billing risk.** The extension's README warns that Anthropic announced, in May 2026, a
+move of `claude -p` and third-party use to a separate, smaller credit billed at API rates.
+The change is on hold. It affects Pi with Claude and a direct `claude -p` alike, so the
+factory keeps a second provider ready.
 
 ## Workspaces
 
