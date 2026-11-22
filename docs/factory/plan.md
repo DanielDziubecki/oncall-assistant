@@ -42,14 +42,14 @@ Stages after F1 are a forecast. If a different friction shows up first, we build
 - [`GLOSSARY.md`](../../GLOSSARY.md), [`factory/rules.md`](../../factory/rules.md), [ADR 5](../adr/0005-harness-neutral-factory.md).
 - [`capabilities.md`](capabilities.md): what Claude Code, Codex, Herdr and tmux each offer the factory.
 - [`vps-setup.md`](vps-setup.md): the VPS from scratch.
-- `factory ask`: one question to one harness, headless and read-only, answer in one shape.
+- `factory ask` (a C# tool on .NET 10, run as `bin/factory`): one question to one harness, headless and read-only, answer in one shape.
 - `factory doctor`: tools, harness logins, memory and disk, without calling a model.
 
 **Done when:**
 
 - `make check` passes in CI.
-- On the VPS, `uv run factory doctor` reports no failures.
-- On the VPS, `uv run factory ask --harness claude "Reply with OK"` answers, and so does `--harness codex`.
+- On the VPS, `bin/factory doctor` reports no failures.
+- On the VPS, `bin/factory ask --harness claude "Reply with OK"` answers, and so does `--harness codex`.
 - The events from that first real Codex run replace the synthetic test fixture.
 
 ## F1: Critic and bench (next)

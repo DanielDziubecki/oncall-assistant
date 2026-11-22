@@ -8,8 +8,9 @@ The project is built with coding agents, one step and one PR at a time. Building
 
 ## Decision
 
-- **The factory is files and one small command in this repo.** `AGENTS.md` holds the instructions for every harness; Codex reads it and `CLAUDE.md` imports it with `@AGENTS.md`. Factory rules and model sizes live in `factory/`. The `factory` package, a uv workspace member, is the only code that starts a harness.
-- **Harnesses are workers behind drivers.** A driver turns one job into one headless command (`claude -p`, `codex exec`) and reads the answer into one shape: text, model, time, tokens and cost. Jobs ask for a size, `small` or `large`, and `factory/models.toml` maps sizes to models per harness. Adding a harness means one driver and one table.
+- **The factory is files and one small command in this repo.** `AGENTS.md` holds the instructions for every harness; Codex reads it and `CLAUDE.md` imports it with `@AGENTS.md`. Factory rules and model sizes live in `factory/`. The `factory` tool is the only code that starts a harness.
+- **The factory is C# on .NET 10, the product stays Python.** Daniel knows .NET well, so the factory teaches agent design without a language in the way, while the product teaches Python. The tool is a .NET console app (a dotnet tool, command `factory`) with xUnit tests; warnings are errors and nullable checks are on. File-based C# scripts are fine for occasional jobs, but hooks call the compiled tool: measured on the same machine, a cached script starts in about 1.6 s and the tool in about 0.1 s.
+- **Harnesses are workers behind drivers.** A driver turns one job into one headless command (`claude -p`, `codex exec`) and reads the answer into one shape: text, model, time, tokens and cost. Jobs ask for a size, `small` or `large`, and `factory/models.json` maps sizes to models per harness. Adding a harness means one driver and one entry.
 - **A factory job sees only its prompt.** Claude runs with `--safe-mode --tools ""`; Codex runs with `--sandbox read-only --disable hooks`. Neither loads the project's hooks, so the factory's own hooks can't trigger themselves.
 - **Subscriptions build; API keys measure.** The factory runs on Daniel's subscriptions. The benchmark's Claude Code setups keep the metered API key held by the credential proxy, as the plan says: a subscription login can't sit behind the proxy, and its runs can't be priced or pinned the same way.
 - **Workspace: Herdr, with tmux as a fallback.** The Herdr app runs on Daniel's computer and herdr-core (`hc`) on the VPS. Factory code drives terminals through `hc` (run, send, read, keys, wait), the same operations tmux offers.
@@ -21,3 +22,5 @@ The project is built with coding agents, one step and one PR at a time. Building
 - The Codex driver is tested against synthetic events until the first run on the VPS records real ones.
 - Factory tests use fake harness executables and never call a model, so CI needs no model key.
 - The factory's model use is separate from the product's $40/month LLM cap.
+- The repo needs two toolchains, uv and the .NET 10 SDK; `make check` and CI run both.
+- The factory stays in this repo for now. It moves to its own repo when a second project needs it, when it gets in the product's way, or once it has stabilized. Already coupled: the doctor's project-specific checks (Docker for shopfront) and the paths to this repo's docs. Model choices belong to the person, not the project. `models.json` is found by searching upward from the working directory, so the tool doesn't depend on where it's installed.

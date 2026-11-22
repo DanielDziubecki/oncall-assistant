@@ -64,17 +64,21 @@ Log out and back in, then `docker run --rm hello-world`.
 - **Docker group means root.** Anyone, or any agent, that can run Docker controls the whole VPS. Keep this VPS for this project only, with no other secrets on it.
 - **Published ports skip the firewall.** Docker writes its own rules, so `ufw` doesn't protect a published port. Shopfront binds every port to `127.0.0.1`; keep it that way, and open Grafana through a tunnel: `ssh -L 3000:127.0.0.1:3000 vps`, then <http://localhost:3000>.
 
-## 5. Agent: uv, Node and Codex
+## 5. Agent: uv, .NET, Node and Codex
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
+curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0
+echo 'export DOTNET_ROOT="$HOME/.dotnet"; export PATH="$HOME/.dotnet:$PATH"' >> ~/.bashrc
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 npm config set prefix ~/.local
 npm install -g @openai/codex
 ```
 
-`~/.local/bin` (uv, Codex) must be on `PATH`; the uv installer offers to add it.
+uv runs the Python product, the .NET 10 SDK builds the factory (installed into `~/.dotnet`
+without `sudo`), and Node runs Codex. `~/.local/bin` (uv, Codex) must be on `PATH`; the uv
+installer offers to add it. Open a new shell afterwards so the `PATH` changes apply.
 
 **You:** run `codex login --device-auth` and sign in with your ChatGPT account.
 
@@ -97,7 +101,7 @@ mkdir -p ~/src && cd ~/src
 git clone https://github.com/DanielDziubecki/oncall-assistant.git
 git clone https://github.com/DanielDziubecki/shopfront.git
 cd oncall-assistant && make install && make check
-uv run factory doctor
+bin/factory doctor
 ```
 
 **You:** run `gh auth login`, then `gh auth setup-git`, so agents can push branches and open PRs.
@@ -105,8 +109,8 @@ uv run factory doctor
 The VPS is ready when `factory doctor` reports no failures and both harnesses answer:
 
 ```bash
-uv run factory ask --harness claude "Reply with OK"
-uv run factory ask --harness codex "Reply with OK"
+bin/factory ask --harness claude "Reply with OK"
+bin/factory ask --harness codex "Reply with OK"
 ```
 
 ## What never goes on this VPS's containers

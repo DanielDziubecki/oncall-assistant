@@ -36,3 +36,19 @@ jobs:
 
       - name: Test
         run: uv run pytest
+
+  factory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Format
+        run: dotnet format factory --verify-no-changes
+
+      - name: Test
+        run: dotnet test factory

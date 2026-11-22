@@ -42,9 +42,9 @@ only on purpose, in a PR, and say why.
 | Factory | The agents, checks and commands that help build this project. Not part of the product. | `factory/` |
 | Main | The one focused conversation that plans and writes the code for a step. Only Main edits files. | |
 | Harness | A program that runs a model as a coding agent: Claude Code or Codex. | |
-| Driver | Factory code that runs one harness headless and reads its answer. | `factory/src/factory/drivers/`; not a product *adapter* |
+| Driver | Factory code that runs one harness headless and reads its answer. | `factory/src/Factory/Drivers/`; not a product *adapter* |
 | Workspace | The program that hosts terminals and panes: Herdr, with tmux as a fallback. | `hc` is Herdr's command line. |
-| Size | What a factory job asks for instead of a model: `small` or `large`. | `factory/models.toml` |
+| Size | What a factory job asks for instead of a model: `small` or `large`. | `factory/models.json` |
 | Job | One piece of factory work, such as one `factory ask`. | Not "run". |
 | Factory agent | A helper with one job, such as the Critic or a domain agent. It advises and never edits files. | `factory/agents/<name>/`; not an *agent under test* |
 | Finding | One short, numbered item a factory agent reports. It reaches Main only when Daniel sends it. | |
