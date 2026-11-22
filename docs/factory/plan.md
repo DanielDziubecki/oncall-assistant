@@ -22,9 +22,9 @@ The project plan says *what* to build. This plan grows the system that builds it
 | Stage | What | Lab part | Course |
 | --- | --- | --- | --- |
 | **F0** Foundation (this PR) | `AGENTS.md`, glossary, rules, capability map, VPS guide, and the Pi trial that picks the harness | — | S01E04, S04E02 |
-| **F1** Secure base | VPS reachable only through Tailscale; an isolated container per project for agent work; secrets injected per project, never on disk; outbound-only networking for agents | Private network, sandboxes, password vault | S01E05, S04E02a |
+| **F1** Secure base | VPS reachable only through Tailscale; an isolated container per project for agent work; secrets injected per project, never on disk (Bitwarden Secrets Manager: one machine account per project); outbound-only networking for agents | Private network, sandboxes, password vault | S01E05, S04E02a |
 | **F2** Action monitor | A hook before every tool call (`PreToolUse` exists in Claude Code and Codex; Pi uses an extension) asks a small model to allow, deny or ask Daniel; every decision is logged; proven against a set of dangerous and harmless commands | Action monitor | S02E05, S04E04 |
-| **F3** Reach Daniel anywhere | Approvals and notifications on the phone; the coordinator reachable from the phone | "ask approval" | S01E05 |
+| **F3** Reach Daniel anywhere | Approvals and notifications on Daniel's iPhone (ntfy, or similar); the coordinator reachable from the phone | "ask approval" | S01E05 |
 | **F4** The coordinator | One coordinator Daniel talks to. It starts workers as Herdr templates, each in its own git worktree inside the project sandbox. Work is shared through files: one folder per task with notes and evidence, claimed by one agent at a time. First job: run project steps and open PRs for approval. | AI agents | S01E04, S04E03a |
 | **F5** Knowledge base | A Markdown repo of decisions, repo maps and run logs; relevant parts are pushed to workers; a librarian agent keeps it tidy | Knowledge base | S01E03, S04E02 |
 | **F6** Quality layer | The Critic, the bench, domain agents with memories and scenario checks, sealed cases, and a Trainer behind two keys. The less Daniel watches, the more these must catch. | (checks) | S04E01–S04E05 |

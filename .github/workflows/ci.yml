@@ -45,6 +45,9 @@ jobs:
         env:
           LAB_TARGET: .target/shopfront
 
+      - name: Lint shell scripts
+        run: shellcheck -S warning scripts/*.sh
+
   leakcheck:
     runs-on: ubuntu-latest
     timeout-minutes: 10
