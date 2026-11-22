@@ -15,7 +15,7 @@ REPO_OWNER="DanielDziubecki"
 
 say() { printf '\n== %s\n' "$*"; }
 need_root() { [ "$(id -u)" -eq 0 ] || { echo "run this as root" >&2; exit 1; }; }
-as_dev() { sudo -u "$DEV_USER" -H bash -lc "$*"; }
+as_dev() { sudo -u "$DEV_USER" -H bash -lc "cd ~ || exit 1; $*"; }
 has() { command -v "$1" >/dev/null 2>&1; }
 
 # Guide step 3: base packages, a firewall that only lets SSH in, automatic security updates.
