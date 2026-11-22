@@ -111,7 +111,7 @@ section_check() {
         done
         docker info >/dev/null 2>&1 && echo "  ok       docker daemon reachable" || echo "  check    docker daemon (log out and back in after the docker section)"
     '
-    say "left for you, in your own SSH session as $DEV_USER"
+    say "your steps as $DEV_USER: 'done' is finished, 'todo' is left for you"
     as_dev 'export PATH="$HOME/.local/bin:$PATH"; claude auth status --text >/dev/null 2>&1' \
         && echo "  done     Claude login" || echo "  todo     claude            (log in with your subscription)"
     as_dev 'export PATH="$HOME/.local/bin:$PATH"; codex login status >/dev/null 2>&1' \
