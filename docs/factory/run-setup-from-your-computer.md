@@ -69,9 +69,19 @@ check to give me the list of what is left for me.
 2. `ssh dev@<vps-ip>`, then log in to each tool: `claude`, `codex login --device-auth`, `gh auth login` and `gh auth setup-git`.
 3. While still logged in as `dev`, run `sudo true` to prove sudo works.
 
+If SSH refuses `dev`, the server may have an `AllowUsers` list. You can still do steps 2 and 3
+from a root session with `su - dev`. To let `dev` in from your Tailscale network, run this
+yourself in Git Bash, then log in through the server's Tailscale name:
+
+```bash
+ssh vps 'bash -s -- ssh-access' < scripts/vps-setup.sh
+```
+
 ## 5. You: close root login
 
-Only after step 4 worked, from your computer:
+Only after step 4 worked, including a real SSH login as `dev` (`su - dev` doesn't count, and
+`harden` checks). This also ends any root fallback login, so make sure you can reach your
+provider's console. From your computer, in Git Bash (PowerShell rejects the `<`):
 
 ```bash
 ssh vps 'CONFIRM_DEV_LOGIN=yes bash -s -- harden' < scripts/vps-setup.sh

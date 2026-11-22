@@ -26,7 +26,9 @@ sudo mkdir -p /home/dev/.ssh && sudo cp ~/.ssh/authorized_keys /home/dev/.ssh/
 sudo chown -R dev:dev /home/dev/.ssh && sudo chmod 700 /home/dev/.ssh
 ```
 
-From your computer, check that `ssh dev@<vps>` works. **Keep that session open**, then turn off
+From your computer, check that `ssh dev@<vps>` works. If it doesn't, stop: turning off root
+login now would lock you out (`sudo sshd -T | grep allowusers` shows whether an allow-list is
+the cause). If it works, **keep that session open**, then turn off
 password and root login. A file of our own in `sshd_config.d` wins over the one many cloud
 images ship that turns passwords back on:
 
