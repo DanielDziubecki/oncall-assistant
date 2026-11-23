@@ -135,3 +135,31 @@ bash scripts/pi-setup.sh install && bash scripts/pi-setup.sh check && bash scrip
 ```
 
 Then the Herdr app (step 6 of `vps-setup.md`, with the `vps-dev` host from your SSH config).
+
+## 7. You: SSH only from your Tailscale devices (F1)
+
+After `harden`, SSH still answers on the server's public address, so every bot on the internet
+can knock. The `tailnet-only` section makes the firewall accept SSH only on Tailscale. Before
+you run it:
+
+1. **Point `vps-dev` at Tailscale.** In `%USERPROFILE%\.ssh\config`, set its `HostName` to the
+   server's Tailscale name or its `100.x` address (shown by `tailscale ip -4` on the server, or
+   in the Tailscale app), not the public IP. Then log in once with `ssh vps-dev`.
+2. **Key expiry is off** for the server in Tailscale (step 5).
+3. **The provider's console works** (step 5). If Tailscale ever stops, it is your way back in.
+
+Then, logged in with `ssh vps-dev`:
+
+```bash
+cd ~/src/oncall-assistant && git pull && sudo CONFIRM_CONSOLE=yes bash scripts/vps-setup.sh tailnet-only
+```
+
+It refuses unless the SSH log shows your key login as `dev` from a Tailscale address since SSH's
+settings last changed, so a config that still points at the public IP can't cut you off.
+
+Test it: `ssh vps-dev` must still work, and from a machine outside your tailnet, or with the
+Tailscale app switched off, `ssh dev@<public-ip>` must time out. To undo it, on the console:
+
+```bash
+sudo ufw allow OpenSSH
+```
