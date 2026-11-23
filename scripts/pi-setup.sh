@@ -95,9 +95,9 @@ cmd_check() {
     done < <(pinned)
 
     say "logins: 'done' works, 'todo' is left for you (bash scripts/logins.sh)"
-    if claude auth status --text >/dev/null 2>&1; then line done "Claude Code, used by the claude-code provider"
+    if claude auth status --text >/dev/null 2>&1; then line "done" "Claude Code, used by the claude-code provider"
     else bad todo "Claude Code login"; fi
-    if pi auth check --provider openai-codex >/dev/null 2>&1; then line done "ChatGPT in Pi (openai-codex)"
+    if pi auth check --provider openai-codex >/dev/null 2>&1; then line "done" "ChatGPT in Pi (openai-codex)"
     else bad todo "ChatGPT in Pi"; fi
 
     say "models"
