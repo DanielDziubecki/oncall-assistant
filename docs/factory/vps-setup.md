@@ -120,54 +120,57 @@ echo "Reply with OK" | codex exec --sandbox read-only --ephemeral -
 
 ## 8. You and Agent: the Pi trial
 
-This step decides the factory's harness (ADR 5). Pi would be the one harness, with your
-Claude and ChatGPT subscriptions as providers inside it. Note each result as you go.
+This step decided the factory's harness (ADR 5): Pi, with your Claude and ChatGPT
+subscriptions as providers inside it ([ADR 8](../adr/0008-pi-as-harness.md)). On a new
+server, repeat it to check that both still work. Work in an empty folder such as
+`~/pi-trial`, so Pi loads no project instructions, and send no message in an interactive
+`pi`: it runs tools without asking.
 
-1. **Install Pi** (it needs Node 22.19 or newer, from step 5):
-
-   ```bash
-   curl -fsSL https://pi.dev/install.sh | sh
-   ```
-
-2. **Claude through your subscription.** Install the extension, which routes Pi's Claude requests through Claude Code (`claude -p`), using the login from step 2:
+1. **Install Pi** (it needs Node 22.19 or newer, from step 5). `scripts/vps-setup.sh` already
+   did; otherwise:
 
    ```bash
-   pi install https://github.com/earendil-works/pi-claude-code
+   npm install -g --ignore-scripts @earendil-works/pi-coding-agent
    ```
 
-   Start `pi`, run `/claude-code-status`, then pick a model from the "Claude Code Subscription (Experimental)" provider with `/model`.
+2. **Claude through your subscription.** Install the extension, which routes Pi's Claude requests through Claude Code (`claude -p`), using the login from step 2. Read the code of a Pi package before installing it, and pin it to the commit you read: an unpinned git package is reset to its newest code every time Pi starts.
 
-3. **ChatGPT through your subscription.** In `pi`, run `/login`, choose OpenAI, and sign in with your ChatGPT account. On a VPS, paste the final redirect URL or code back into Pi when it asks.
+   ```bash
+   pi install git:github.com/earendil-works/pi-claude-code@d5b5e04c314d3452d357174d16d10dda34daa2d2
+   ```
 
-4. **One headless answer from each:**
+   Start `pi`, run `/claude-code-status`, then check that `/model` lists the "Claude Code Subscription (Experimental)" provider.
+
+3. **ChatGPT through your subscription.** Start `PI_HYPERLINKS=0 pi`, run `/login` and choose the ChatGPT (Codex) login, not an OpenAI API key. Over SSH the sign-in link is invisible unless links are off, and its copy to the clipboard may not arrive. Open the link on your computer; the browser then fails on a `localhost` address, which you paste back into Pi.
+
+4. **One headless answer from each.** The ChatGPT models are under the `openai-codex` provider:
 
    ```bash
    pi --list-models
    ```
 
    ```bash
-   pi -p --mode json --no-tools --model <a Claude model from the list> "Reply with OK" > claude.jsonl
+   pi -p --mode json --no-tools --model claude-code/<a model from the list> "Reply with OK" > claude.jsonl
    ```
 
    ```bash
-   pi -p --mode json --no-tools --model <an OpenAI model from the list> "Reply with OK" > openai.jsonl
+   pi -p --mode json --no-tools --model openai-codex/<a model from the list> "Reply with OK" > openai.jsonl
    ```
 
-5. **The course's extensions in Herdr.** Install John's lab and agent extensions, then run `/lab doctor` inside `pi` in a Herdr pane:
+5. **The course's extensions.** Install John's lab and agent extensions, pinned, then run only `/lab doctor` inside `pi`. Both need Pi inside the Herdr desktop app, so on a headless VPS the doctor reports `herdr-app not found on PATH`; that is expected. Don't run `/lab new` or `/lab test` before the action monitor (F2): they start agents with tools on.
 
    ```bash
-   pi install git:github.com/johnlindquist/herdr-pi-lab
+   pi install git:github.com/johnlindquist/herdr-pi-lab@83ad72fa2bfc0291ef65eafeb043c3fe2c7319f7
    ```
 
    ```bash
-   pi install git:github.com/johnlindquist/herdr-pi-role
+   pi install git:github.com/johnlindquist/herdr-pi-role@e51fca8c503c92b2d00475f9cba19db00f774eee
    ```
 
-6. **Instructions load once.** In this repo, ask Pi what instructions it loaded. `AGENTS.md` should appear once; `CLAUDE.md` contains only `@AGENTS.md`.
+6. **Instructions load once.** Run the Claude command from step 4 inside this repo, writing to a file outside it, and look at the `project_context` section of the system prompt in the JSON. It should hold `AGENTS.md` once and no `CLAUDE.md`.
 
-**The trial passes** when steps 2–6 work. Then Pi is the harness. If Claude or ChatGPT
-can't be used from Pi, Claude Code and Codex stay the harnesses. Either way, keep
-`claude.jsonl` and `openai.jsonl`: they are real samples the factory's tests can use.
+**The trial passes** when steps 2, 3, 4 and 6 work. The trial's samples, with ids and account
+usage removed, are in [`factory/samples/pi/`](../../factory/samples/pi/).
 
 ## What never goes on this VPS's containers
 

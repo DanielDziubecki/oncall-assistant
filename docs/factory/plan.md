@@ -41,7 +41,7 @@ Later stages are a forecast and will change with what we learn.
 **Done when:**
 
 - The VPS is set up and both subscriptions answer a headless question.
-- The Pi trial is done and its result is written down as ADR 6: Pi as the harness, or Claude Code and Codex (reusing the `factory-dotnet-drivers` branch).
+- The Pi trial is done and its result is written down as ADR 8: Pi as the harness, or Claude Code and Codex (reusing the `factory-dotnet-drivers` branch). Done: [ADR 8](../adr/0008-pi-as-harness.md) picks Pi.
 
 ## Keeping the factory and the product apart
 

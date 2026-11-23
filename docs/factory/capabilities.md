@@ -44,21 +44,23 @@ Re-check a row before relying on it after a harness update.
 
 ## Pi
 
-Pi is one open-source harness that uses many providers. It is the candidate to replace
-Claude Code and Codex as harnesses, with both subscriptions as providers (ADR 5; the trial
-is step 8 of [`vps-setup.md`](vps-setup.md)). Sources: Pi's `README.md` and `docs/`
-(`cli.md`, `models.md`, `providers.md`, `configuration.md`), the `pi-claude-code` README,
-and how the course's RentAPlace code calls Pi.
+Pi is one open-source harness that uses many providers. Since the trial (step 8 of
+[`vps-setup.md`](vps-setup.md), [ADR 8](../adr/0008-pi-as-harness.md)) it is the factory's
+harness, with both subscriptions as providers. Sources: Pi's `README.md` and `docs/`
+(`cli.md`, `models.md`, `providers.md`, `configuration.md`, `packages.md`, `security.md`),
+the `pi-claude-code` README and code, how the course's RentAPlace code calls Pi, and the
+trial with Pi 1.6.0.
 
 | Capability | Pi | Source |
 | --- | --- | --- |
 | Headless run | `pi -p --mode json "..."` writes events as JSONL; `--mode rpc` and a TypeScript SDK also exist | docs |
 | No tools, no project context | `--no-tools`, `--no-mcp`, and flags that skip extensions, skills, prompts and context files (RentAPlace uses `-ne -ns -np -nc`) | docs, course code |
-| Instructions | Reads `AGENTS.md` and `CLAUDE.md` from the agent folder, the working folder and its parents; `AGENTS.override.md` replaces them in its folder | docs |
-| Claude subscription | The `pi-claude-code` extension sends Claude requests through `claude -p`; Claude Code runs no tools itself. Experimental. | extension README |
-| ChatGPT subscription | `/login`, then OpenAI, signing in with ChatGPT | docs |
+| Instructions | One context file per folder (`AGENTS.md` before `CLAUDE.md`) from the agent folder, the working folder and its parents; `AGENTS.override.md` replaces it in its folder. In this repo it loads `AGENTS.md` only. | docs, trial |
+| Claude subscription | The `pi-claude-code` extension sends Claude requests through `claude -p` with Claude Code's tools off; provider `claude-code`. Experimental. | extension README and code, trial |
+| ChatGPT subscription | `/login`, then the ChatGPT (Codex) login; provider `openai-codex`. Over SSH, start Pi with `PI_HYPERLINKS=0` to see the sign-in link. | docs, trial |
 | Models | `pi --list-models`; `--model <provider>/<model>` | docs, course code |
-| Extensions | TypeScript, installed with `pi install`; can add commands, tools, hooks on tool calls and keys | docs |
+| Extensions | TypeScript, installed with `pi install`; can add commands, tools, hooks on tool calls and keys. A git package is reset to its newest code on every start unless pinned to a commit. | docs |
+| Tool approval | None: Pi runs tools without asking. `--no-tools` turns them off. | `security.md` |
 | Subagents | Not built in; added by extensions or by starting more Pi instances (in Herdr) | README |
 | Secrets | A provider key in `auth.json` can be a command such as `!op read ...`, run when the key is first needed | docs |
 
