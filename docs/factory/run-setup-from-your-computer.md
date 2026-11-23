@@ -77,9 +77,10 @@ and stop after check to give me the list of what is left for me.
 `check` ends with a list of what is left. In your own terminal:
 
 1. `ssh vps`, then `passwd dev` to give `dev` a password (sudo needs it).
-2. `ssh vps-dev`, then log in to each tool: `claude`, `codex login --device-auth`, `gh auth login` and `gh auth setup-git`.
-   Use a GitHub account without admin rights, approve it in a private browser window, and
-   check that `gh api user --jq .login` names that account.
+2. `ssh vps-dev`, then `cd ~/src/oncall-assistant && bash scripts/logins.sh`. It runs each
+   login in turn (Claude Code, Codex, GitHub, ChatGPT in Pi) and skips those that already work.
+   Use a GitHub account without admin rights and approve it in a private browser window; the
+   script names the account at the end.
 3. While still logged in as `dev`, run `sudo true` to prove sudo works.
 
 If SSH refuses `dev`, the server may have an `AllowUsers` list. You can still do steps 2 and 3
@@ -126,5 +127,11 @@ cd ~/src/oncall-assistant && git pull && sudo bash scripts/vps-setup.sh check
 
 ## 6. Then
 
-The Herdr app (step 6 of `vps-setup.md`, with the `vps-dev` host from your SSH config) and the
-Pi trial (step 8; the script already installed Pi).
+Pi's packages and a check that both subscriptions work in Pi (step 8 of `vps-setup.md`). As
+`dev`, in `~/src/oncall-assistant`, or by asking Claude Code to run them over `ssh vps-dev`:
+
+```bash
+bash scripts/pi-setup.sh install && bash scripts/pi-setup.sh check && bash scripts/pi-setup.sh answers
+```
+
+Then the Herdr app (step 6 of `vps-setup.md`, with the `vps-dev` host from your SSH config).

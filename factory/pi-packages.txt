@@ -1,0 +1,6 @@
+# Pi packages for the factory (ADR 8), each pinned to a commit whose code was read.
+# Change a pin only after reading the new code: an unpinned git package is reset to its
+# newest code every time Pi starts. scripts/pi-setup.sh installs exactly these.
+git:github.com/earendil-works/pi-claude-code@d5b5e04c314d3452d357174d16d10dda34daa2d2
+git:github.com/johnlindquist/herdr-pi-lab@83ad72fa2bfc0291ef65eafeb043c3fe2c7319f7
+git:github.com/johnlindquist/herdr-pi-role@e51fca8c503c92b2d00475f9cba19db00f774eee
