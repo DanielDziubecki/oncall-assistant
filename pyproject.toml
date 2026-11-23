@@ -50,10 +50,12 @@ select = [
 ]
 
 [tool.pyright]
-include = ["src", "tests", "lab/src"]
+include = ["src", "tests", "lab/src", "factory"]
+extraPaths = ["factory"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["factory"]
 addopts = ["--strict-markers", "--strict-config", "--import-mode=importlib"]

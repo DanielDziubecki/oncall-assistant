@@ -118,9 +118,12 @@ section_check() {
         && echo "  done     Codex login" || echo "  todo     codex login --device-auth"
     as_dev 'gh auth status >/dev/null 2>&1' \
         && echo "  done     GitHub login" || echo "  todo     gh auth login, then gh auth setup-git"
+    as_dev 'export PATH="$HOME/.local/bin:$PATH"; pi auth check --provider openai-codex >/dev/null 2>&1' \
+        && echo "  done     ChatGPT in Pi" || echo "  todo     pi auth login openai-codex --no-browser"
+    echo "           (bash scripts/logins.sh, as $DEV_USER in ~/src/oncall-assistant, runs every login above)"
     passwd -S "$DEV_USER" | grep -q " P " \
         && echo "  done     $DEV_USER has a password" || echo "  todo     as root: passwd $DEV_USER   (needed for sudo, and before harden)"
-    echo "  then     the Pi trial: docs/factory/vps-setup.md, step 8"
+    echo "  then     as $DEV_USER: bash scripts/pi-setup.sh install, then check (docs/factory/vps-setup.md, step 8)"
 }
 
 # Run by you, only where AllowUsers leaves the dev user out: lets it in from the tailnet.

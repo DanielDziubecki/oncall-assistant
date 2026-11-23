@@ -122,9 +122,19 @@ echo "Reply with OK" | codex exec --sandbox read-only --ephemeral -
 
 This step decided the factory's harness (ADR 5): Pi, with your Claude and ChatGPT
 subscriptions as providers inside it ([ADR 8](../adr/0008-pi-as-harness.md)). On a new
-server, repeat it to check that both still work. Work in an empty folder such as
-`~/pi-trial`, so Pi loads no project instructions, and send no message in an interactive
-`pi`: it runs tools without asking.
+server, repeat it to check that both still work.
+
+**Scripted:** as `dev`, in this repo, after the logins (`bash scripts/logins.sh`):
+
+```bash
+bash scripts/pi-setup.sh install && bash scripts/pi-setup.sh check && bash scripts/pi-setup.sh answers
+```
+
+`install` uses the pins in [`factory/pi-packages.txt`](../../factory/pi-packages.txt). `check`
+asks no model; `answers` does steps 4 and 6 and writes scrubbed copies of the samples. The
+steps below are what they do, by hand. Work in an empty folder such as `~/pi-trial`, so Pi
+loads no project instructions, and send no message in an interactive `pi`: it runs tools
+without asking.
 
 1. **Install Pi** (it needs Node 22.19 or newer, from step 5). `scripts/vps-setup.sh` already
    did; otherwise:
@@ -141,7 +151,7 @@ server, repeat it to check that both still work. Work in an empty folder such as
 
    Start `pi`, run `/claude-code-status`, then check that `/model` lists the "Claude Code Subscription (Experimental)" provider.
 
-3. **ChatGPT through your subscription.** Start `PI_HYPERLINKS=0 pi`, run `/login` and choose the ChatGPT (Codex) login, not an OpenAI API key. Over SSH the sign-in link is invisible unless links are off, and its copy to the clipboard may not arrive. Open the link on your computer; the browser then fails on a `localhost` address, which you paste back into Pi.
+3. **ChatGPT through your subscription.** Run `pi auth login openai-codex --no-browser` (the ChatGPT login, not an OpenAI API key) and sign in with the device code it shows; `scripts/logins.sh` does this too. Inside `pi`, `/login` works as well, but over SSH its sign-in link is invisible unless you start `PI_HYPERLINKS=0 pi`.
 
 4. **One headless answer from each.** The ChatGPT models are under the `openai-codex` provider:
 
