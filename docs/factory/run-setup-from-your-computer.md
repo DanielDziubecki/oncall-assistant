@@ -163,3 +163,46 @@ Tailscale app switched off, `ssh dev@<public-ip>` must time out. To undo it, on 
 ```bash
 sudo ufw allow OpenSSH
 ```
+
+## 8. You: the agents' sandbox (F1, ADR 9)
+
+Agents work in an Incus container, `oncall`, not as `dev` on the VPS: a wrong command can then
+damage the sandbox, not your logins or the server. Logged in with `ssh vps-dev`, in
+`~/src/oncall-assistant`, after `git pull`:
+
+```bash
+sudo bash scripts/sandbox.sh install
+```
+
+```bash
+sudo bash scripts/sandbox.sh create
+```
+
+```bash
+sudo bash scripts/sandbox.sh provision
+```
+
+`install` adds Incus and the firewall rules its network needs, and adds you to `incus-admin`
+(log out and in again to use `incus` without `sudo`). `create` makes the container, with a
+10 GiB memory limit. `provision` builds the inside (user `agent`, Docker, the tools, both repos)
+in a few minutes and saves the snapshot `clean`. If it says the sandbox can't reach GitHub,
+send the message: the firewall rules for Incus are the part that couldn't be tested before.
+
+Then make the sandbox's own logins. Enter it as `agent`:
+
+```bash
+sudo bash scripts/sandbox.sh shell
+```
+
+and inside, in `~/src/oncall-assistant`:
+
+```bash
+bash scripts/logins.sh && bash scripts/pi-setup.sh install && bash scripts/pi-setup.sh check
+```
+
+Use a GitHub account or token limited to this project's two repos, not your admin account.
+Leave with `exit`, then save the result: `sudo bash scripts/sandbox.sh snapshot logged-in`.
+
+From now on, start agents in a Herdr pane with `incus exec oncall -- su -l agent`. Useful:
+`sudo bash scripts/sandbox.sh status`, and `sudo CONFIRM_RESTORE=yes bash scripts/sandbox.sh restore clean`
+to put the whole sandbox back.
