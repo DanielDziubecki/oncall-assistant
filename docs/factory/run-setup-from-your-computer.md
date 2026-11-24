@@ -206,3 +206,34 @@ Leave with `exit`, then save the result: `sudo bash scripts/sandbox.sh snapshot 
 From now on, start agents in a Herdr pane with `incus exec oncall -- su -l agent`. Useful:
 `sudo bash scripts/sandbox.sh status`, and `sudo CONFIRM_RESTORE=yes bash scripts/sandbox.sh restore clean`
 to put the whole sandbox back.
+
+## 9. You: the sandbox's allowlist (F2, ADR 10)
+
+The sandbox may then connect only to the hosts in `factory/sandbox/allowlist.txt`: GitHub, the
+model APIs, package registries, Docker Hub and Ubuntu's mirrors. Logged in with `ssh vps-dev`,
+in `~/src/oncall-assistant`, after `git pull`:
+
+```bash
+sudo bash scripts/sandbox.sh lockdown
+```
+
+It ends with a self-test: direct connections blocked, an allowed host reachable, a host outside
+the list refused, Docker reaching its registry. If any line says FAIL, send it.
+
+After some real work in the sandbox, see what was refused:
+
+```bash
+sudo bash scripts/sandbox.sh denied
+```
+
+Each host there is either something real work needs (add it to the allowlist in a PR, with
+the reason, then run `lockdown` again) or something an agent shouldn't have tried.
+
+To re-provision or install something from an installer site, unlock for the duration, then lock
+again:
+
+```bash
+sudo CONFIRM_UNLOCK=yes bash scripts/sandbox.sh unlock
+```
+
+`status` says whether the network is locked down.
