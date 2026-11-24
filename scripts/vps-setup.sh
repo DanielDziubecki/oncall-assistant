@@ -5,6 +5,7 @@
 #   ssh vps 'bash -s -- <section>' < scripts/vps-setup.sh
 # Sections, in order: base user docker tools repos check harden
 # ssh-access is only for servers whose AllowUsers leaves dev out. Run it yourself, before harden.
+# tailnet-only (F1) closes SSH to the internet. Run it yourself, after harden.
 #
 # Every section checks before it changes anything, so running it again is safe.
 # Logins (Claude, Codex, Pi, GitHub) are never done here: `check` lists what is left for you.
@@ -19,14 +20,18 @@ need_root() { [ "$(id -u)" -eq 0 ] || { echo "run this as root" >&2; exit 1; }; 
 as_dev() { sudo -u "$DEV_USER" -H bash -lc "cd ~ || exit 1; $*"; }
 has() { command -v "$1" >/dev/null 2>&1; }
 
-# True if the dev user logged in with a key after SSH's settings last changed. A real login is
-# the only proof that covers allow and deny lists, groups and keys. _UID=0 stops forged entries.
+# Tailscale gives every device an address in these ranges (IPv4 100.64.0.0/10, IPv6 fd7a:115c:a1e0::/48).
+TAILNET_FROM='(100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]+\.[0-9]+|fd7a:115c:a1e0:[0-9a-fA-F:]*)'
+
+# True if the dev user logged in with a key after SSH's settings last changed, from an address
+# matching $1 (default: any). A real login is the only proof that covers allow and deny lists,
+# groups and keys. _UID=0 stops forged entries.
 dev_login_proven() {
-    local changed
+    local changed from="${1:-[^ ]+}"
     changed="$(stat -c %Y /etc/ssh/sshd_config /etc/ssh/sshd_config.d /etc/ssh/sshd_config.d/* | sort -n | tail -n 1)"
     # not grep -q: it stops reading early, which pipefail would report as a failure
     journalctl -q -o cat --since "@$changed" _UID=0 _COMM=sshd \
-        | grep "^Accepted publickey for $DEV_USER from " >/dev/null
+        | grep -E "^Accepted publickey for $DEV_USER from $from " >/dev/null
 }
 
 # Guide step 3: base packages, a firewall that only lets SSH in, automatic security updates.
@@ -170,12 +175,37 @@ section_harden() {
     echo "done: log in as $DEV_USER from now on"
 }
 
+# F1, run by you after harden: SSH only from your Tailscale devices. It refuses unless Tailscale is
+# up, the SSH log shows a key login by the dev user from a tailnet address, and you confirm you can
+# open your provider's web console. Opening the tailnet rule first keeps your current session.
+section_tailnet_only() {
+    has tailscale || { echo "refusing: Tailscale is not installed" >&2; exit 1; }
+    tailscale status >/dev/null 2>&1 || { echo "refusing: Tailscale is not connected; run: tailscale up" >&2; exit 1; }
+    ip -o link show tailscale0 >/dev/null 2>&1 || { echo "refusing: there is no tailscale0 network interface" >&2; exit 1; }
+    dev_login_proven "$TAILNET_FROM" || {
+        echo "refusing: no key login by $DEV_USER from a tailnet address since SSH's settings last changed." >&2
+        echo "Set HostName in your SSH config to the VPS's Tailscale name or 100.x address, log in as $DEV_USER, run again." >&2
+        exit 1
+    }
+    [ "${CONFIRM_CONSOLE:-}" = "yes" ] || {
+        echo "refusing: check that you can open your provider's web console for this server (your way in if" >&2
+        echo "Tailscale fails), then run this section again with CONFIRM_CONSOLE=yes" >&2
+        exit 1
+    }
+    say "SSH from the tailnet only"
+    ufw allow in on tailscale0 to any port 22 proto tcp comment 'SSH from the tailnet only'
+    ufw delete allow OpenSSH >/dev/null 2>&1 || true
+    ufw status verbose
+    echo "done: SSH answers only on Tailscale. From outside the tailnet, ssh to the public IP now times out."
+}
+
 need_root
 [ $# -ge 1 ] || { sed -n '2,9p' "$0" 2>/dev/null || echo "usage: <section>"; exit 2; }
 for section in "$@"; do
     case "$section" in
         base|user|docker|tools|repos|check|harden) "section_$section" ;;
         ssh-access) section_ssh_access ;;
-        *) echo "unknown section: $section (base user docker tools repos check ssh-access harden)" >&2; exit 2 ;;
+        tailnet-only) section_tailnet_only ;;
+        *) echo "unknown section: $section (base user docker tools repos check ssh-access harden tailnet-only)" >&2; exit 2 ;;
     esac
 done
