@@ -1,0 +1,35 @@
+# Where agents in the sandbox may connect (F2, ADR 10). One exact host name per line; anything
+# else is refused by the proxy on the VPS and listed by `scripts/sandbox.sh denied`.
+# Add a host only after seeing it refused for a real need, in a PR, with the reason.
+
+# GitHub: clone, push branches, pull requests, CI results, release downloads (uv, Python builds)
+github.com
+api.github.com
+codeload.github.com
+objects.githubusercontent.com
+raw.githubusercontent.com
+release-assets.githubusercontent.com
+
+# Claude: Pi's claude-code provider runs `claude -p`, which talks to Anthropic
+api.anthropic.com
+claude.ai
+
+# ChatGPT: Pi's openai-codex provider
+chatgpt.com
+auth.openai.com
+api.openai.com
+
+# Python and Node packages
+pypi.org
+files.pythonhosted.org
+registry.npmjs.org
+
+# Docker Hub: the images shopfront and the lab use (cloudfront: found by `denied` in testing)
+registry-1.docker.io
+auth.docker.io
+production.cloudflare.docker.com
+production.cloudfront.docker.com
+
+# Ubuntu packages inside the sandbox
+archive.ubuntu.com
+security.ubuntu.com
